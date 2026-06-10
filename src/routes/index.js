@@ -10,6 +10,31 @@ const router = Router();
 
 router.use("/exemple", exempleRoutes);
 
+/**
+ * @openapi
+ * /api:
+ *   get:
+ *     tags:
+ *       - Sante
+ *     summary: Verifie le fonctionnement de l'API
+ *     responses:
+ *       200:
+ *         description: API fonctionnelle
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "API OmniaCom en fonctionnement"
+ *                 version:
+ *                   type: string
+ *                   example: "1.0.0"
+ */
 router.get("/", (req, res) => {
   res.json({
     success: true,

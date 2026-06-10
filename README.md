@@ -242,6 +242,65 @@ L'API est maintenant accessible sur `GET /api/produits`, `GET /api/produits/1`, 
 | `npm run prisma:studio` | Ouvre Prisma Studio (interface graphique pour la DB) |
 | `npm run prisma:seed` | Remplit la base avec des donnees de test |
 | `npm run setup` | Installation complete |
+| `npm run openapi:generate` | Genere le fichier `openapi.json` statique |
+
+---
+
+## Documentation de l'API (Swagger / OpenAPI)
+
+Ce projet utilise **Swagger** pour documenter automatiquement l'API.
+
+### Interface Swagger UI
+
+Lancez le serveur puis ouvrez dans votre navigateur :
+
+```
+http://localhost:3000/api-docs
+```
+
+L'interface Swagger UI permet de :
+- visualiser tous les endpoints disponibles
+- lire les schemas des requetes et reponses
+- tester chaque endpoint directement depuis le navigateur
+
+### Export vers Postman
+
+**Option 1** — Depuis Swagger UI :
+1. Ouvrez `http://localhost:3000/api-docs`
+2. Cliquez sur le bouton `/api/openapi.json` en haut
+3. Dans Postman, utilisez `Import -> Link` et collez l'URL
+
+**Option 2** — Fichier JSON statique :
+1. Demarrez le serveur ou executez `npm run openapi:generate`
+2. Importez le fichier dans Postman via `Import -> Files`
+
+**Option 3** — Directement depuis le serveur en cours :
+```
+http://localhost:3000/api/openapi.json
+```
+
+### Ajouter de la documentation a vos propres routes
+
+Placez un bloc `@openapi` au-dessus de chaque fonction de controleur :
+
+```javascript
+/**
+ * @openapi
+ * /api/produits:
+ *   get:
+ *     tags:
+ *       - Produits
+ *     summary: Liste tous les produits
+ *     responses:
+ *       200:
+ *         description: Liste des produits
+ */
+export async function getAll(req, res, next) {
+  // ...
+}
+```
+
+Les annotations utilisent le standard **OpenAPI 3.1.0**. Consultez la [documentation officielle OpenAPI](https://swagger.io/specification/) pour la syntaxe complete et [swagger-jsdoc](https://github.com/Surnet/swagger-jsdoc) pour la configuration des annotations.
 
 ---
 
@@ -291,6 +350,9 @@ L'API est maintenant accessible sur `GET /api/produits`, `GET /api/produits/1`, 
 
 ## Documentation complementaire
 
+- [OpenAPI Specification](https://swagger.io/specification/) — Standard de documentation d'API
+- [Swagger UI Express](https://github.com/scottie1984/swagger-ui-express) — Interface Swagger pour Express
+- [swagger-jsdoc](https://github.com/Surnet/swagger-jsdoc) — Generation de la spec via les annotations JSDoc
 - [Prisma Documentation](https://www.prisma.io/docs)
 - [Express Guide](https://expressjs.com/en/guide/routing.html)
 - [Prisma Client CRUD](https://www.prisma.io/docs/orm/prisma-client/queries/crud)

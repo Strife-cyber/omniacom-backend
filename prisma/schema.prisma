@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =============================================================================
+// EXEMPLE DE MODELE : Utilisateur
+// =============================================================================
+// Decommentez et adaptez ce modele pour commencer.
+// Supprimez-le ou remplacez-le par vos propres modeles.
+// =============================================================================
+
+// model Utilisateur {
+//   id        Int      @id @default(autoincrement())
+//   email     String   @unique
+//   nom       String
+//   motDePasse String   @map("mot_de_passe")
+//   role      Role     @default(UTILISATEUR)
+//   createdAt DateTime @default(now()) @map("created_at")
+//   updatedAt DateTime @updatedAt @map("updated_at")
+//
+//   @@map("utilisateurs")
+// }
+//
+// enum Role {
+//   ADMIN
+//   UTILISATEUR
+// }

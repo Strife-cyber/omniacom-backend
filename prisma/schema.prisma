@@ -1,6 +1,5 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -14,19 +13,83 @@ datasource db {
 // Supprimez-le ou remplacez-le par vos propres modeles.
 // =============================================================================
 
-// model Utilisateur {
-//   id        Int      @id @default(autoincrement())
-//   email     String   @unique
-//   nom       String
-//   motDePasse String   @map("mot_de_passe")
-//   role      Role     @default(UTILISATEUR)
-//   createdAt DateTime @default(now()) @map("created_at")
-//   updatedAt DateTime @updatedAt @map("updated_at")
-//
-//   @@map("utilisateurs")
-// }
-//
-// enum Role {
-//   ADMIN
-//   UTILISATEUR
-// }
+model Utilisateur {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  nom       String
+  motDePasse String   @map("mot_de_passe")
+  role      Role     @default(UTILISATEUR)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("utilisateurs")
+}
+
+enum Role {
+  PMO
+  ADMIN
+  UTILISATEUR
+  GESTIONNAIRE_EPI
+  GESTIONNAIRE_PLANNING
+}
+
+
+model Technicien {
+  id        Int      @id @default(autoincrement())
+  nom       String
+  prenom    String
+  telephone String
+  status    TechnicienStatut
+
+  interventions Intervention[]
+
+  @@map("techniciens")
+}
+
+enum TechnicienStatut {
+  ACTIF
+  INACTIF
+}
+
+
+model Site {
+  id              Int      @id @default(autoincrement())
+  nom             String
+  localisation    String
+  region          String
+
+  interventions    Intervention[]
+
+  @@map("sites")
+}
+
+
+model Intervention {
+  id              Int                     @id @default(autoincrement())
+  siteId          Int                     @map("site_id")
+  technicienId    Int                     @map("technicien_id")
+  timestampDebut  DateTime                @default(now()) @map("timestamp_debut")
+  timestampFin    DateTime                @map("timestamp_fin")
+  typeAction      InterventionTypeAction  @map("type_action")
+  statut          InterventionStatut
+
+  site            Site                    @relation(fields: [siteId], references: [id])
+  technicien      Technicien              @relation(fields: [technicienId], references: [id])
+
+  @@map("interventions")
+}
+
+enum InterventionTypeAction {
+  MAINTENANCE
+  DEPANNAGE
+  INSTALLATION
+  AUDIT
+}
+
+enum InterventionStatut {
+  PLANIFIE
+  EN_COURS
+  TERMINE
+  ANNULE
+  REPORTE
+}

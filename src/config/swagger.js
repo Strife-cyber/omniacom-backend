@@ -71,9 +71,31 @@ const swaggerDefinition = {
     },
     schemas: {
       Utilisateur: {
-        type: "object",
-        properties: {
-          id: { type: "integer", description: "Identifiant unique" },
+      "type": "object",
+      "properties": {
+            "id": {
+                  "type": "integer",
+                  "example": 1
+            },
+            "email": {
+                  "type": "string"
+            },
+            "nom": {
+                  "type": "string"
+            },
+            "motDePasse": {
+                  "type": "string"
+            },
+            "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+            },
+            "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+            }
+      }
+},
           email: { type: "string", format: "email" },
           nom: { type: "string" },
           role: {
@@ -110,6 +132,63 @@ const swaggerDefinition = {
       },
     },
   },
+      Technicien: {
+      "type": "object",
+      "properties": {
+            "id": {
+                  "type": "integer",
+                  "example": 1
+            },
+            "nom": {
+                  "type": "string"
+            },
+            "prenom": {
+                  "type": "string"
+            },
+            "telephone": {
+                  "type": "string"
+            }
+      }
+},
+      Site: {
+      "type": "object",
+      "properties": {
+            "id": {
+                  "type": "integer",
+                  "example": 1
+            },
+            "nom": {
+                  "type": "string"
+            },
+            "localisation": {
+                  "type": "string"
+            },
+            "region": {
+                  "type": "string"
+            }
+      }
+},
+      Intervention: {
+      "type": "object",
+      "properties": {
+            "id": {
+                  "type": "integer",
+                  "example": 1
+            },
+            "siteId": {
+                  "type": "integer"
+            },
+            "technicienId": {
+                  "type": "integer"
+            },
+            "timestampDebut": {
+                  "type": "string"
+            },
+            "timestampFin": {
+                  "type": "string"
+            }
+      }
+},
 };
 
 const options = {

@@ -1,5 +1,9 @@
 import { Router } from "express";
 import exempleRoutes from "./exemple.routes.js";
+import utilisateurRoutes from "./utilisateur.routes.js";
+import technicienRoutes from "./technicien.routes.js";
+import siteRoutes from "./site.routes.js";
+import interventionRoutes from "./intervention.routes.js";
 
 const router = Router();
 
@@ -10,6 +14,10 @@ const router = Router();
 
 router.use("/exemple", exempleRoutes);
 
+router.use("/utilisateurs", utilisateurRoutes);
+router.use("/techniciens", technicienRoutes);
+router.use("/sites", siteRoutes);
+router.use("/interventions", interventionRoutes);
 /**
  * @openapi
  * /api:

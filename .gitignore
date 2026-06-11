@@ -33,3 +33,4 @@ logs/
 # --- Build / Dist ---
 dist/
 build/
+openapi.json

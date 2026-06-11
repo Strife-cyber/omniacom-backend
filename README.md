@@ -243,6 +243,48 @@ L'API est maintenant accessible sur `GET /api/produits`, `GET /api/produits/1`, 
 | `npm run prisma:seed` | Remplit la base avec des donnees de test |
 | `npm run setup` | Installation complete |
 | `npm run openapi:generate` | Genere le fichier `openapi.json` statique |
+| `npm run generate` | Lance le generateur de code (mode interactif) |
+| `npm run generate -- --model Modele` | Genere le CRUD pour un modele specifique |
+
+---
+
+## Generateur de code automatique
+
+Ce projet contient un generateur qui produit automatiquement le service, le controleur,
+les routes et les annotations OpenAPI a partir d'un modele Prisma.
+
+### Utilisation
+
+```bash
+# Mode interactif (choisir le modele dans la liste)
+npm run generate
+
+# Mode direct (generer pour un modele specifique)
+npm run generate -- --model Categorie
+```
+
+### Ce qui est genere
+
+Pour un modele `Categorie`, le generateur cree :
+
+| Fichier | Emplacement |
+|---|---|
+| Service | `src/services/categorie.service.js` |
+| Controleur | `src/controllers/categorie.controller.js` |
+| Routes | `src/routes/categorie.routes.js` |
+| Enregistrement | `src/routes/index.js` (mis a jour automatiquement) |
+
+### Contenu genere
+
+- **Service** : CRUD complet (`findAll`, `findById`, `create`, `update`, `remove`)
+- **Controleur** : 5 fonctions avec `try/catch` + `next(err)` + `@openapi` JSDoc
+- **Routes** : 5 routes REST (GET, GET/:id, POST, PUT/:id, DELETE/:id)
+- **Annotations** : OpenAPI avec types, parametres, codes de reponse
+
+### Fonctionnement
+
+Le generateur analyse `prisma/schema.prisma`, detecte les modeles et leurs champs,
+et genere le code correspondant en respectant l'architecture du projet.
 
 ---
 

@@ -13,6 +13,7 @@
     "prisma:studio": "prisma studio",
     "prisma:seed": "node prisma/seed.js",
     "openapi:generate": "node scripts/generate-openapi.js",
+    "generate": "node scripts/generate/index.js",
     "setup": "npm install && prisma generate && prisma migrate dev",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -268,6 +268,7 @@ function templateController(m) {
     .join("\n");
 
   return `import * as service from "../services/${m.kebabCase}.service.js";
+import { filterOutput } from "../middlewares/authorize.js";
 
 // =============================================================================
 // Controleur ${m.pascalCase}
@@ -299,7 +300,7 @@ function templateController(m) {
 export async function getAll(req, res, next) {
   try {
     const items = await service.findAll();
-    res.json({ success: true, data: items });
+    res.json({ success: true, data: filterOutput(req.user, items, "${m.pascalCase}") });
   } catch (err) {
     next(err);
   }
@@ -339,7 +340,7 @@ export async function getById(req, res, next) {
   try {
     const id = ${idExpr};
     const item = await service.findById(id);
-    res.json({ success: true, data: item });
+    res.json({ success: true, data: filterOutput(req.user, item, "${m.pascalCase}") });
   } catch (err) {
     next(err);
   }
@@ -467,21 +468,20 @@ export async function remove(req, res, next) {
 
 function templateRoutes(m) {
   return `import { Router } from "express";
+import { authenticate } from "../middlewares/authenticate.js";
+import { authorize } from "../middlewares/authorize.js";
 import * as controller from "../controllers/${m.kebabCase}.controller.js";
 
 const router = Router();
 
-// GET    /api/${m.kebabCase}s      -> Liste tous les ${m.kebabCase}s
-// GET    /api/${m.kebabCase}s/{id} -> Detail d un ${m.kebabCase}
-// POST   /api/${m.kebabCase}s      -> Creer un ${m.kebabCase}
-// PUT    /api/${m.kebabCase}s/{id} -> Mettre a jour un ${m.kebabCase}
-// DELETE /api/${m.kebabCase}s/{id} -> Supprimer un ${m.kebabCase}
+// Toutes les routes sont protegees par authentification + autorisation
+// Les politiques sont definies dans src/middlewares/authorize.js
 
-router.get("/", controller.getAll);
-router.get("/:id", controller.getById);
-router.post("/", controller.create);
-router.put("/:id", controller.update);
-router.delete("/:id", controller.remove);
+router.get("/", authenticate, authorize("read", "${m.pascalCase}"), controller.getAll);
+router.get("/:id", authenticate, authorize("read", "${m.pascalCase}"), controller.getById);
+router.post("/", authenticate, authorize("create", "${m.pascalCase}"), controller.create);
+router.put("/:id", authenticate, authorize("update", "${m.pascalCase}"), controller.update);
+router.delete("/:id", authenticate, authorize("delete", "${m.pascalCase}"), controller.remove);
 
 export default router;
 `;

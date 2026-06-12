@@ -19,6 +19,10 @@ export const NODE_ENV = process.env.NODE_ENV || "development";
 export const CORS_ORIGINS = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim())
   : ["http://localhost:3000"];
+export const JWT_SECRET = process.env.JWT_SECRET || "fallback-dev-secret";
+export const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "24h";
+export const JWT_REFRESH_EXPIRES_IN =
+  process.env.JWT_REFRESH_EXPIRES_IN || "7d";
 
 export const isDevelopment = NODE_ENV === "development";
 export const isProduction = NODE_ENV === "production";

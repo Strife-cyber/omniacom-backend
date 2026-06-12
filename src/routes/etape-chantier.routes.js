@@ -1,4 +1,6 @@
 import { Router } from "express";
+import { authenticate } from "../middlewares/authenticate.js";
+import { authorize } from "../middlewares/authorize.js";
 import * as controller from "../controllers/etape-chantier.controller.js";
 
 const router = Router();
@@ -9,10 +11,10 @@ const router = Router();
 // PUT    /api/etape-chantiers/{id} -> Mettre a jour un etape-chantier
 // DELETE /api/etape-chantiers/{id} -> Supprimer un etape-chantier
 
-router.get("/", controller.getAll);
-router.get("/:id", controller.getById);
-router.post("/", controller.create);
-router.put("/:id", controller.update);
-router.delete("/:id", controller.remove);
+router.get("/", authenticate, authorize("read", "EtapeChantier"), controller.getAll);
+router.get("/:id", authenticate, authorize("read", "EtapeChantier"), controller.getById);
+router.post("/", authenticate, authorize("create", "EtapeChantier"), controller.create);
+router.put("/:id", authenticate, authorize("update", "EtapeChantier"), controller.update);
+router.delete("/:id", authenticate, authorize("delete", "EtapeChantier"), controller.remove);
 
 export default router;

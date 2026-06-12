@@ -1,5 +1,6 @@
 import { Router } from "express";
 import exempleRoutes from "./exemple.routes.js";
+import authRoutes from "../auth/auth.routes.js";
 import utilisateurRoutes from "./utilisateur.routes.js";
 import technicienRoutes from "./technicien.routes.js";
 import siteRoutes from "./site.routes.js";
@@ -15,25 +16,21 @@ import verificationEPI_EquipementRoutes from "./verification-e-p-i_-equipement.r
 
 const router = Router();
 
-// Ajoutez vos routes ici :
-// router.use("/utilisateurs", utilisateurRoutes);
-// router.use("/produits", produitRoutes);
-// router.use("/commandes", commandeRoutes);
-
+router.use("/auth", authRoutes);
 router.use("/exemple", exempleRoutes);
-
 router.use("/utilisateurs", utilisateurRoutes);
 router.use("/techniciens", technicienRoutes);
 router.use("/sites", siteRoutes);
 router.use("/interventions", interventionRoutes);
-router.use("/equipementss", equipementsRoutes);
-router.use("/verification-e-p-is", verificationEPIRoutes);
+router.use("/equipements", equipementsRoutes);
+router.use("/verifications-epi", verificationEPIRoutes);
 router.use("/presences", presenceRoutes);
 router.use("/chantiers", chantierRoutes);
-router.use("/bon-de-commandes", bonDeCommandeRoutes);
-router.use("/etape-chantiers", etapeChantierRoutes);
-router.use("/ligne-facturations", ligneFacturationRoutes);
-router.use("/verification-e-p-i_-equipements", verificationEPI_EquipementRoutes);
+router.use("/bons-de-commande", bonDeCommandeRoutes);
+router.use("/etapes-chantier", etapeChantierRoutes);
+router.use("/lignes-facturation", ligneFacturationRoutes);
+router.use("/epi-equipements", verificationEPI_EquipementRoutes);
+
 /**
  * @openapi
  * /api:

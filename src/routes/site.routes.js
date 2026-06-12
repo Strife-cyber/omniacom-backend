@@ -1,4 +1,6 @@
 import { Router } from "express";
+import { authenticate } from "../middlewares/authenticate.js";
+import { authorize } from "../middlewares/authorize.js";
 import * as controller from "../controllers/site.controller.js";
 
 const router = Router();
@@ -9,10 +11,10 @@ const router = Router();
 // PUT    /api/sites/{id} -> Mettre a jour un site
 // DELETE /api/sites/{id} -> Supprimer un site
 
-router.get("/", controller.getAll);
-router.get("/:id", controller.getById);
-router.post("/", controller.create);
-router.put("/:id", controller.update);
-router.delete("/:id", controller.remove);
+router.get("/", authenticate, authorize("read", "Site"), controller.getAll);
+router.get("/:id", authenticate, authorize("read", "Site"), controller.getById);
+router.post("/", authenticate, authorize("create", "Site"), controller.create);
+router.put("/:id", authenticate, authorize("update", "Site"), controller.update);
+router.delete("/:id", authenticate, authorize("delete", "Site"), controller.remove);
 
 export default router;

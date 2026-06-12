@@ -1,4 +1,5 @@
 import * as service from "../services/verification-e-p-i_-equipement.service.js";
+import { filterOutput } from "../middlewares/authorize.js";
 
 // =============================================================================
 // Controleur VerificationEPI_Equipement
@@ -30,7 +31,7 @@ import * as service from "../services/verification-e-p-i_-equipement.service.js"
 export async function getAll(req, res, next) {
   try {
     const items = await service.findAll();
-    res.json({ success: true, data: items });
+    res.json({ success: true, data: filterOutput(req.user, items, "VerificationEPI_Equipement") });
   } catch (err) {
     next(err);
   }
@@ -70,7 +71,7 @@ export async function getById(req, res, next) {
   try {
     const id = parseInt(req.params.id, 10);
     const item = await service.findById(id);
-    res.json({ success: true, data: item });
+    res.json({ success: true, data: filterOutput(req.user, item, "VerificationEPI_Equipement") });
   } catch (err) {
     next(err);
   }
@@ -164,7 +165,7 @@ export async function update(req, res, next) {
   try {
     const id = parseInt(req.params.id, 10);
     const item = await service.update(id, req.body);
-    res.json({ success: true, data: item });
+    res.json({ success: true, data: filterOutput(req.user, item, "VerificationEPI_Equipement") });
   } catch (err) {
     next(err);
   }

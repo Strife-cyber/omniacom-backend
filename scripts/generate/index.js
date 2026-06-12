@@ -594,14 +594,6 @@ function genererSchemaOpenApi(m, enumsDisponibles) {
   m.champs.forEach((c) => {
     const prop = { type: typeToOpenApi(c.type) };
     if (c.estId) prop.example = c.type === "Int" ? 1 : "uuid";
-    if (c.estListe) {
-      prop.type = "array";
-      prop.items = {
-        type: c.type.endsWith("[]")
-          ? typeToOpenApi(c.type.replace("[]", ""))
-          : "string",
-      };
-    }
     props[c.nom] = prop;
   });
 
@@ -619,36 +611,12 @@ function genererSchemaOpenApi(m, enumsDisponibles) {
 }
 
 function mettreAJourSwaggerSchemas(tousModeles, enumsDisponibles) {
-  const chemin = resolve(ROOT, "src/config/swagger.js");
-  let content = readFileSync(chemin, "utf-8");
-
-  tousModeles.forEach((m) => {
-    const schema = genererSchemaOpenApi(m, enumsDisponibles);
-    if (!schema) return;
-
-    const schemaName = m.pascalCase;
-    const searchRegex = new RegExp(`\\b${schemaName}:\\s*\\{[^}]*\\}`, "s");
-
-    if (content.includes(`${schemaName}:`)) {
-      // Remplacer le schema existant
-      content = content.replace(
-        searchRegex,
-        `${schemaName}: ${JSON.stringify(schema, null, 6)}`,
-      );
-    } else {
-      // Ajouter le nouveau schema
-      const insertionPoint = content.lastIndexOf("},");
-      if (insertionPoint !== -1) {
-        const newSchema = `\n      ${schemaName}: ${JSON.stringify(schema, null, 6)},`;
-        content =
-          content.slice(0, insertionPoint + 2) +
-          newSchema +
-          content.slice(insertionPoint + 2);
-      }
-    }
-  });
-
-  writeFileSync(chemin, content, "utf-8");
+  console.log(
+    "  [WARN] La mise a jour automatique des schemas Swagger est desactivee.",
+  );
+  console.log(
+    "  Ajoutez manuellement les schemas dans src/config/swagger.js -> components.schemas",
+  );
 }
 
 function afficherResume(resultats) {

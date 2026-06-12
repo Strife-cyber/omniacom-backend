@@ -7,7 +7,7 @@ const swaggerDefinition = {
     title: "OmniaCom API",
     version: "1.0.0",
     description:
-      "API RESTful de l'application OmniaCom. Toutes les routes sont prefaxees par /api.",
+      "API RESTful de l'application OmniaCom. Toutes les routes sont prefixees par /api.",
     contact: {
       name: "Equipe OmniaCom",
     },
@@ -19,6 +19,14 @@ const swaggerDefinition = {
     },
   ],
   components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        description: "Token JWT d'authentification",
+      },
+    },
     responses: {
       SuccessResponse: {
         description: "Reponse standard de succes",
@@ -71,47 +79,22 @@ const swaggerDefinition = {
     },
     schemas: {
       Utilisateur: {
-      "type": "object",
-      "properties": {
-            "id": {
-                  "type": "integer",
-                  "example": 1
-            },
-            "email": {
-                  "type": "string"
-            },
-            "nom": {
-                  "type": "string"
-            },
-            "motDePasse": {
-                  "type": "string"
-            },
-            "createdAt": {
-                  "type": "string",
-                  "format": "date-time"
-            },
-            "updatedAt": {
-                  "type": "string",
-                  "format": "date-time"
-            }
-      }
-},
+        type: "object",
+        properties: {
+          id: { type: "integer", example: 1 },
           email: { type: "string", format: "email" },
           nom: { type: "string" },
           role: {
             type: "string",
-            enum: ["ADMIN", "UTILISATEUR"],
+            enum: [
+              "ADMIN",
+              "UTILISATEUR",
+              "GESTIONNAIRE_EPI",
+              "GESTIONNAIRE_PLANNING",
+            ],
           },
-          createdAt: {
-            type: "string",
-            format: "date-time",
-            description: "Date de creation",
-          },
-          updatedAt: {
-            type: "string",
-            format: "date-time",
-            description: "Date de mise a jour",
-          },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
         },
       },
       Error: {
@@ -123,72 +106,7 @@ const swaggerDefinition = {
         },
       },
     },
-    securitySchemes: {
-      bearerAuth: {
-        type: "http",
-        scheme: "bearer",
-        bearerFormat: "JWT",
-        description: "Token JWT d'authentification",
-      },
-    },
   },
-      Technicien: {
-      "type": "object",
-      "properties": {
-            "id": {
-                  "type": "integer",
-                  "example": 1
-            },
-            "nom": {
-                  "type": "string"
-            },
-            "prenom": {
-                  "type": "string"
-            },
-            "telephone": {
-                  "type": "string"
-            }
-      }
-},
-      Site: {
-      "type": "object",
-      "properties": {
-            "id": {
-                  "type": "integer",
-                  "example": 1
-            },
-            "nom": {
-                  "type": "string"
-            },
-            "localisation": {
-                  "type": "string"
-            },
-            "region": {
-                  "type": "string"
-            }
-      }
-},
-      Intervention: {
-      "type": "object",
-      "properties": {
-            "id": {
-                  "type": "integer",
-                  "example": 1
-            },
-            "siteId": {
-                  "type": "integer"
-            },
-            "technicienId": {
-                  "type": "integer"
-            },
-            "timestampDebut": {
-                  "type": "string"
-            },
-            "timestampFin": {
-                  "type": "string"
-            }
-      }
-},
 };
 
 const options = {

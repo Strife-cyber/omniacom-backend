@@ -5,7 +5,7 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon --node-args \"--experimental-strip-types\" src/server.js",
+    "dev": "cross-env NODE_OPTIONS=\"--experimental-strip-types\" nodemon src/server.js",
     "start": "node --experimental-strip-types src/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
@@ -29,18 +29,18 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
-    "bcryptjs": "^3.0.3",
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "jsonwebtoken": "^9.0.3",
+    "jsonwebtoken": "^9.0.2",
     "morgan": "^1.11.0",
     "pg": "^8.21.0",
-    "swagger-jsdoc": "^6.3.0",
+    "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
-    "@types/jsonwebtoken": "^9.0.10",
+    "cross-env": "^7.0.3",
     "nodemon": "^3.1.14",
     "prisma": "^7.8.0"
   },

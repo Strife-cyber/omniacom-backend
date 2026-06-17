@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated"
 }
 
 datasource db {
@@ -41,7 +42,9 @@ model Technicien {
   telephone String
   status    TechnicienStatut
 
-  interventions Intervention[]
+  interventions    Intervention[]
+  verificationsEPI VerificationEPI[]
+  presences         Presence[]
 
   @@map("techniciens")
 }
@@ -75,6 +78,7 @@ model Intervention {
 
   site            Site                    @relation(fields: [siteId], references: [id])
   technicien      Technicien              @relation(fields: [technicienId], references: [id])
+  presences       Presence[]
 
   @@map("interventions")
 }
@@ -92,4 +96,146 @@ enum InterventionStatut {
   TERMINE
   ANNULE
   REPORTE
+}
+
+model Equipements {
+  id        Int      @id @default(autoincrement())
+  nom       String
+  status    EquipementStatut
+
+  @@map("equipements")
+}
+
+enum EquipementStatut {
+  CONFORME
+  EN_RETARD
+  DEFECTUEUX
+  HORS_SERVICE
+}
+
+model VerificationEPI {
+  id                   Int                     @id @default(autoincrement())
+  technicienId         Int                     @map("technicien_id")
+  dateDerniereVerif    DateTime                @default(now()) @map("date_derniere_verif")
+  dateDemande          DateTime                @map("date_demande")
+  dateEnvoie           DateTime                @map("date_envoie")
+  joursRetard          Int
+  prochaineDate        DateTime                @map("prochaine_date")
+  statut               VerificationEPIStatut
+
+  technicien           Technicien              @relation(fields: [technicienId], references: [id])
+
+  @@map("verification_epi")
+}
+
+enum VerificationEPIStatut {
+  CONFORME
+  EN_RETARD
+  DEFECTUEUX
+}
+
+model Presence {
+  id               Int                     @id @default(autoincrement())
+  technicienId     Int                     @map("technicien_id")
+  interventionsId  Int                     @map("interventions_id")
+  date             DateTime                @default(now()) @map("date")
+  statut           PresenceStatut
+
+  technicien       Technicien              @relation(fields: [technicienId], references: [id])
+  intervention     Intervention            @relation(fields: [interventionsId], references: [id])
+
+  @@map("presences")
+}
+
+enum PresenceStatut {
+  PRESENT
+  ABSENT
+  EN_CONGE
+  MALADIE
+  DEPLACEMENT
+}
+
+model Chantier {
+  id                    Int                    @id @default(autoincrement())
+  entreprise            String
+  codeSite              String
+  nomSite               String
+  typeSite              String
+  status                ChantierStatut
+  avancementPlanifie    Float
+  avancementReel        Float
+  dateGo                DateTime                @default(now()) @map("date")
+
+  bonDeCommandes        BonDeCommande[]
+  etapesChantier        EtapeChantier[]
+
+  @@map("chantier")
+}
+
+enum ChantierStatut {
+  DONE
+  ON_GOING
+  NEED_CLEAN_SITE
+  LANDLORD_ISSUE
+  APD_ON_GOING
+}
+
+model BonDeCommande {
+  id                   Int                     @id @default(autoincrement())
+  chantierId           Int                     @map("chantier_id")
+  numeroBc            String
+  montantPo           Decimal                 @db.Decimal(15, 2)
+  montantFacture      Decimal                 @db.Decimal(15, 2)
+  montantRestant      Decimal                 @db.Decimal(15, 2)
+  projetAssocie       String
+  chantier             Chantier                @relation(fields: [chantierId], references: [id])
+  lignesFacturation    LigneFacturation[]
+
+  @@map("bon_de_commande")
+}
+
+model EtapeChantier {
+  id                   Int                     @id @default(autoincrement())
+  chantierId           Int                     @map("chantier_id")
+  nomEtape            String
+  datePlanifiee       DateTime
+  dateReelle          DateTime
+  retardMinutes       Int
+  status               EtapeChantierStatut
+  chantier             Chantier                @relation(fields: [chantierId], references: [id])
+
+  @@map("etape_chantier")
+}
+
+enum EtapeChantierStatut {
+  EN_ATTENTE
+  EN_COURS
+  TERMINE
+  EN_RETARD
+}
+
+
+model LigneFacturation {
+  id                   Int                     @id @default(autoincrement())
+  bonDeCommandeId      Int                     @map("bon_de_commande_id")
+  montantHt            Decimal                 @db.Decimal(15, 2) @map("montant_ht")
+  statutPaiement       String                  @map("statut_paiement")
+  dateFacture          DateTime                @map("date_facture")
+  description          String
+  bonDeCommande        BonDeCommande           @relation(fields: [bonDeCommandeId], references: [id])
+
+  @@map("ligne_facturation")
+}
+
+enum LigneFacturationStatut {
+  PAID
+  NOT_PAID
+}
+
+model VerificationEPI_Equipement {
+  verificationEpiId Int @map("verification_epi_id")
+  equipementsId     Int @map("equipements_id")
+
+  @@id([verificationEpiId, equipementsId])
+  @@map("verification_epi_equipement")
 }

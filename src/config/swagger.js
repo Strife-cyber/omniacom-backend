@@ -7,7 +7,7 @@ const swaggerDefinition = {
     title: "OmniaCom API",
     version: "1.0.0",
     description:
-      "API RESTful de l'application OmniaCom. Toutes les routes sont prefaxees par /api.",
+      "API RESTful de l'application OmniaCom. Toutes les routes sont prefixees par /api.",
     contact: {
       name: "Equipe OmniaCom",
     },
@@ -19,6 +19,14 @@ const swaggerDefinition = {
     },
   ],
   components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        description: "Token JWT d'authentification",
+      },
+    },
     responses: {
       SuccessResponse: {
         description: "Reponse standard de succes",
@@ -73,23 +81,20 @@ const swaggerDefinition = {
       Utilisateur: {
         type: "object",
         properties: {
-          id: { type: "integer", description: "Identifiant unique" },
+          id: { type: "integer", example: 1 },
           email: { type: "string", format: "email" },
           nom: { type: "string" },
           role: {
             type: "string",
-            enum: ["ADMIN", "UTILISATEUR"],
+            enum: [
+              "ADMIN",
+              "UTILISATEUR",
+              "GESTIONNAIRE_EPI",
+              "GESTIONNAIRE_PLANNING",
+            ],
           },
-          createdAt: {
-            type: "string",
-            format: "date-time",
-            description: "Date de creation",
-          },
-          updatedAt: {
-            type: "string",
-            format: "date-time",
-            description: "Date de mise a jour",
-          },
+          createdAt: { type: "string", format: "date-time" },
+          updatedAt: { type: "string", format: "date-time" },
         },
       },
       Error: {
@@ -101,20 +106,17 @@ const swaggerDefinition = {
         },
       },
     },
-    securitySchemes: {
-      bearerAuth: {
-        type: "http",
-        scheme: "bearer",
-        bearerFormat: "JWT",
-        description: "Token JWT d'authentification",
-      },
-    },
   },
 };
 
 const options = {
   swaggerDefinition,
-  apis: ["./src/routes/*.js", "./src/controllers/*.js", "./src/models/*.js"],
+  apis: [
+    "./src/routes/*.js",
+    "./src/controllers/*.js",
+    "./src/models/*.js",
+    "./src/auth/*.js",
+  ],
 };
 
 export const swaggerSpec = swaggerJsdoc(options);

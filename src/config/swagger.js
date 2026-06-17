@@ -111,7 +111,12 @@ const swaggerDefinition = {
 
 const options = {
   swaggerDefinition,
-  apis: ["./src/routes/*.js", "./src/controllers/*.js", "./src/models/*.js"],
+  apis: [
+    "./src/routes/*.js",
+    "./src/controllers/*.js",
+    "./src/models/*.js",
+    "./src/auth/*.js",
+  ],
 };
 
 export const swaggerSpec = swaggerJsdoc(options);

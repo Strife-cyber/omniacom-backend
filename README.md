@@ -4,36 +4,67 @@ API RESTful pour l'application OmniaCom — construite avec Node.js, Express, Pr
 
 ---
 
+## Table des matieres
+
+1. [Structure du projet](#structure-du-projet)
+2. [Demarrage rapide](#demarrage-rapide)
+3. [Modeles de donnees](#modeles-de-donnees)
+4. [Authentification](#authentification)
+5. [Politiques d'acces (RBAC)](#politiques-dacces-rbac)
+6. [API disponibles](#api-disponibles)
+7. [Generateur de code automatique](#generateur-de-code-automatique)
+8. [Remplissage de la base (Seed)](#remplissage-de-la-base-seed)
+9. [Documentation Swagger](#documentation-swagger)
+10. [Scripts disponibles](#scripts-disponibles)
+11. [Technologies](#technologies)
+12. [Documentation complementaire](#documentation-complementaire)
+
+---
+
 ## Structure du projet
 
 ```
 omniacom-backend/
   prisma/
-    schema.prisma          Modeles de votre base de donnees
-    seed.js                Donnees de test (remplissage initial)
+    schema.prisma              Modeles de la base de donnees (13 modeles)
+    seed.js                    Remplissage avec donnees de test
+    migrations/                Historique des migrations Prisma
+  scripts/
+    generate/
+      index.js                 Generateur de code CRUD automatique
+    generate-openapi.js        Export du fichier openapi.json
   src/
+    auth/
+      auth.service.js          Inscription, connexion, JWT
+      auth.controller.js       Endpoints /api/auth/*
+      auth.routes.js           Definition des routes d'auth
     config/
-      env.js               Variables d'environnement (.env)
+      env.js                   Variables d'environnement (.env)
+      swagger.js               Configuration Swagger / OpenAPI
     models/
-      index.js             Client Prisma (acces a la base de donnees)
-    services/
-      exemple.service.js   Logique metier (regles metier)
-    controllers/
-      exemple.controller.js Gestion des requetes HTTP
-    routes/
-      index.js             Point d'entree des routes
-      exemple.routes.js    Definition des URLs
+      index.js                 Client Prisma (acces a la base)
     middlewares/
-      errorHandler.js      Gestion centralisee des erreurs
+      authenticate.js          Verification du token JWT
+      authorize.js             Politiques d'acces (RBAC)
+      errorHandler.js          Gestion centralisee des erreurs
+    services/
+      {modele}.service.js      Logique metier (CRUD)
+    controllers/
+      {modele}.controller.js   Gestion des requetes HTTP
+    routes/
+      index.js                 Point d'entree des routes
+      {modele}.routes.js       Definition des URLs
     utils/
-      ApiError.js          Classe d'erreur personnalisee
-    app.js                 Configuration Express
-    server.js              Point d'entree (demarrage)
-  .env                     Variables d'environnement (ignore par Git)
-  .env.example             Exemple de .env
-  .gitignore               Fichiers ignores par Git
-  package.json             Dependances et scripts
-  README.md                Ce fichier
+      ApiError.js              Classe d'erreur personnalisee
+    app.js                     Configuration Express
+    server.js                  Point d'entree (demarrage)
+    generated/                 Client Prisma genere (ignore par Git)
+  .env                         Variables d'environnement (ignore par Git)
+  .env.example                 Exemple de .env
+  .gitignore                   Fichiers ignores par Git
+  package.json                 Dependances et scripts
+  README.md                    Ce fichier
+  CONTRIBUTING.md              Standards de code et conventions Git
 ```
 
 ---
@@ -42,8 +73,8 @@ omniacom-backend/
 
 ### 1. Prerequis
 
-- Node.js (v18 ou superieur)
-- PostgreSQL (v13 ou superieur)
+- Node.js v22+ (requis pour le support des fichiers `.ts` avec `--experimental-strip-types`)
+- PostgreSQL 13+
 - npm ou yarn
 
 ### 2. Installation
@@ -56,306 +87,281 @@ npm install
 
 ### 3. Configuration
 
-Creez un fichier `.env` a la racine en vous basant sur `.env.example` :
-
 ```bash
 cp .env.example .env
 ```
 
-Le fichier `.env` par defaut contient :
+Ajustez l'URL de connexion PostgreSQL dans `.env` :
 
 ```env
 DATABASE_URL="postgresql://postgres:admin@localhost:5432/omniacom?schema=public"
-PORT=3000
-NODE_ENV=development
-CORS_ORIGINS=http://localhost:3000
+JWT_SECRET="une-cle-secrete-tres-longue"
 ```
 
-Adaptez l'URL de connexion a votre configuration PostgreSQL locale.
-
-> Le fichier `.env` contient des secrets — il est deja dans `.gitignore`.
-
-### 4. Creer la base de donnees
-
-Assurez-vous que PostgreSQL est en cours d'execution, puis creez la base :
+### 4. Creer la base de donnees et appliquer les migrations
 
 ```bash
-psql -U postgres -c "CREATE DATABASE omniacom;"
+npx prisma migrate dev --name init
 ```
 
-### 5. Creer votre premier modele
+Cette commande cree la base de donnees, applique les migrations et genere le client Prisma.
 
-1. Ouvrez `prisma/schema.prisma`
-2. Decommentez le modele `Utilisateur`
-3. Executez les commandes :
+### 5. Remplir avec des donnees de test
 
 ```bash
-npm run prisma:migrate      # Cree la table en base de donnees
-npm run prisma:generate     # Genere le client Prisma
+npm run prisma:seed
 ```
 
 ### 6. Demarrer le serveur
 
 ```bash
-npm run dev     # Mode developpement (rechargement automatique)
+npm run dev        # Mode developpement (rechargement automatique)
 # ou
-npm start       # Mode production
+npm start          # Mode production
 ```
 
-Le serveur demarre sur **http://localhost:3000** et l'API sur **http://localhost:3000/api**.
+Le serveur est disponible sur **http://localhost:3000** et l'API sur **http://localhost:3000/api**.
 
----
-
-## Comment utiliser l'architecture
-
-Ce projet suit le pattern **Modele -> Service -> Controleur -> Route**.
-
-Le flux d'une requete typique :
-
-```
-Requete HTTP -> Routes -> Controleur -> Service -> Modele (Prisma) -> Base de donnees
-```
-
-### Creer une nouvelle fonctionnalite (exemple : Produits)
-
-#### Etape 1 — Creer le modele
-
-Dans `prisma/schema.prisma`, ajoutez :
-
-```prisma
-model Produit {
-  id        Int      @id @default(autoincrement())
-  nom       String
-  prix      Float
-  stock     Int      @default(0)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@map("produits")
-}
-```
-
-Puis executez :
+### Connexion de test
 
 ```bash
-npm run prisma:migrate
-npm run prisma:generate
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@omniacom.fr","motDePasse":"admin123"}'
 ```
-
-#### Etape 2 — Creer le service
-
-Creez `src/services/produit.service.js` :
-
-```javascript
-import { prisma } from "../models/index.js";
-import { ApiError } from "../utils/ApiError.js";
-
-export async function findAll() {
-  return prisma.produit.findMany();
-}
-
-export async function findById(id) {
-  const produit = await prisma.produit.findUnique({ where: { id } });
-  if (!produit) throw new ApiError(404, "Produit introuvable");
-  return produit;
-}
-
-export async function create(data) {
-  return prisma.produit.create({ data });
-}
-```
-
-#### Etape 3 — Creer le controleur
-
-Creez `src/controllers/produit.controller.js` :
-
-```javascript
-import * as service from "../services/produit.service.js";
-
-export async function getAll(req, res, next) {
-  try {
-    const produits = await service.findAll();
-    res.json({ success: true, data: produits });
-  } catch (err) {
-    next(err);
-  }
-}
-
-export async function getById(req, res, next) {
-  try {
-    const produit = await service.findById(parseInt(req.params.id, 10));
-    res.json({ success: true, data: produit });
-  } catch (err) {
-    next(err);
-  }
-}
-
-export async function create(req, res, next) {
-  try {
-    const produit = await service.create(req.body);
-    res.status(201).json({ success: true, data: produit });
-  } catch (err) {
-    next(err);
-  }
-}
-```
-
-#### Etape 4 — Creer les routes
-
-Creez `src/routes/produit.routes.js` :
-
-```javascript
-import { Router } from "express";
-import * as controller from "../controllers/produit.controller.js";
-
-const router = Router();
-
-router.get("/", controller.getAll);
-router.get("/:id", controller.getById);
-router.post("/", controller.create);
-
-export default router;
-```
-
-#### Etape 5 — Enregistrer les routes
-
-Dans `src/routes/index.js`, ajoutez :
-
-```javascript
-import produitRoutes from "./produit.routes.js";
-router.use("/produits", produitRoutes);
-```
-
-L'API est maintenant accessible sur `GET /api/produits`, `GET /api/produits/1`, `POST /api/produits`.
 
 ---
 
-## Scripts disponibles
+## Modeles de donnees
 
-| Commande | Description |
-|---|---|
-| `npm run dev` | Demarre le serveur en developpement (nodemon, rechargement auto) |
-| `npm start` | Demarre le serveur en production |
-| `npm run prisma:generate` | Genere le client Prisma apres modification du schema |
-| `npm run prisma:migrate` | Applique les migrations a la base de donnees |
-| `npm run prisma:reset` | Reinitialise la base de donnees |
-| `npm run prisma:studio` | Ouvre Prisma Studio (interface graphique pour la DB) |
-| `npm run prisma:seed` | Remplit la base avec des donnees de test |
-| `npm run setup` | Installation complete |
-| `npm run openapi:generate` | Genere le fichier `openapi.json` statique |
-| `npm run generate` | Lance le generateur de code (mode interactif) |
-| `npm run generate -- --model Modele` | Genere le CRUD pour un modele specifique |
+Le schema Prisma definit 13 modeles et 7 enums :
+
+```mermaid
+erDiagram
+    Utilisateur ||--o{ Intervention : ""
+    Utilisateur ||--o{ BonDeCommande : ""
+    Technicien ||--o{ Intervention : ""
+    Technicien ||--o{ VerificationEPI : ""
+    Technicien ||--o{ Presence : ""
+    Site ||--o{ Intervention : ""
+    Intervention ||--o{ Presence : ""
+    Intervention ||--o{ VerificationEPI_Equipement : ""
+    Equipements ||--o{ VerificationEPI_Equipement : ""
+    Chantier ||--o{ BonDeCommande : ""
+    Chantier ||--o{ EtapeChantier : ""
+    BonDeCommande ||--o{ LigneFacturation : ""
+    VerificationEPI ||--o{ VerificationEPI_Equipement : ""
+```
+
+| Modele | Table | Description |
+|---|---|---|
+| Utilisateur | utilisateurs | Comptes avec roles (ADMIN, PMO, GESTIONNAIRE_*, UTILISATEUR) |
+| Technicien | techniciens | Techniciens de terrain (actifs/inactifs) |
+| Site | sites | Sites d'intervention (agences regionales) |
+| Intervention | interventions | Interventions planifiees/realisees |
+| Equipements | equipements | Equipements de protection (EPI) |
+| VerificationEPI | verification_epi | Suivi des verifications EPI par technicien |
+| Presence | presences | Pointage des techniciens sur les interventions |
+| Chantier | chantier | Chantiers de construction/renovation |
+| BonDeCommande | bon_de_commande | Bons de commande lies aux chantiers |
+| EtapeChantier | etape_chantier | Etapes de suivi d'avancement |
+| LigneFacturation | ligne_facturation | Lignes de facturation detaillees |
+| VerificationEPI_Equipement | verification_epi_equipement | Liaison many-to-many EPI-equipements |
 
 ---
 
-## Generateur de code automatique
+## Authentification
 
-Ce projet contient un generateur qui produit automatiquement le service, le controleur,
-les routes et les annotations OpenAPI a partir d'un modele Prisma.
+L'authentification repose sur des **tokens JWT** (JSON Web Tokens).
 
-### Utilisation
+### Inscription
 
 ```bash
-# Mode interactif (choisir le modele dans la liste)
-npm run generate
+POST /api/auth/register
+Content-Type: application/json
 
-# Mode direct (generer pour un modele specifique)
-npm run generate -- --model Categorie
-```
-
-### Ce qui est genere
-
-Pour un modele `Categorie`, le generateur cree :
-
-| Fichier | Emplacement |
-|---|---|
-| Service | `src/services/categorie.service.js` |
-| Controleur | `src/controllers/categorie.controller.js` |
-| Routes | `src/routes/categorie.routes.js` |
-| Enregistrement | `src/routes/index.js` (mis a jour automatiquement) |
-
-### Contenu genere
-
-- **Service** : CRUD complet (`findAll`, `findById`, `create`, `update`, `remove`)
-- **Controleur** : 5 fonctions avec `try/catch` + `next(err)` + `@openapi` JSDoc
-- **Routes** : 5 routes REST (GET, GET/:id, POST, PUT/:id, DELETE/:id)
-- **Annotations** : OpenAPI avec types, parametres, codes de reponse
-
-### Fonctionnement
-
-Le generateur analyse `prisma/schema.prisma`, detecte les modeles et leurs champs,
-et genere le code correspondant en respectant l'architecture du projet.
-
----
-
-## Documentation de l'API (Swagger / OpenAPI)
-
-Ce projet utilise **Swagger** pour documenter automatiquement l'API.
-
-### Interface Swagger UI
-
-Lancez le serveur puis ouvrez dans votre navigateur :
-
-```
-http://localhost:3000/api-docs
-```
-
-L'interface Swagger UI permet de :
-- visualiser tous les endpoints disponibles
-- lire les schemas des requetes et reponses
-- tester chaque endpoint directement depuis le navigateur
-
-### Export vers Postman
-
-**Option 1** — Depuis Swagger UI :
-1. Ouvrez `http://localhost:3000/api-docs`
-2. Cliquez sur le bouton `/api/openapi.json` en haut
-3. Dans Postman, utilisez `Import -> Link` et collez l'URL
-
-**Option 2** — Fichier JSON statique :
-1. Demarrez le serveur ou executez `npm run openapi:generate`
-2. Importez le fichier dans Postman via `Import -> Files`
-
-**Option 3** — Directement depuis le serveur en cours :
-```
-http://localhost:3000/api/openapi.json
-```
-
-### Ajouter de la documentation a vos propres routes
-
-Placez un bloc `@openapi` au-dessus de chaque fonction de controleur :
-
-```javascript
-/**
- * @openapi
- * /api/produits:
- *   get:
- *     tags:
- *       - Produits
- *     summary: Liste tous les produits
- *     responses:
- *       200:
- *         description: Liste des produits
- */
-export async function getAll(req, res, next) {
-  // ...
+{
+  "email": "user@example.com",
+  "nom": "Jean Dupont",
+  "motDePasse": "monMotDePasse",
+  "role": "UTILISATEUR"
 }
 ```
 
-Les annotations utilisent le standard **OpenAPI 3.1.0**. Consultez la [documentation officielle OpenAPI](https://swagger.io/specification/) pour la syntaxe complete et [swagger-jsdoc](https://github.com/Surnet/swagger-jsdoc) pour la configuration des annotations.
+Roles disponibles : `ADMIN`, `PMO`, `UTILISATEUR`, `GESTIONNAIRE_EPI`, `GESTIONNAIRE_PLANNING`
+
+### Connexion
+
+```bash
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@omniacom.fr",
+  "motDePasse": "admin123"
+}
+```
+
+Reponse :
+
+```json
+{
+  "success": true,
+  "data": {
+    "utilisateur": { "id": 1, "email": "...", "nom": "...", "role": "ADMIN" },
+    "token": "eyJhbGciOiJIUzI1NiIs..."
+  }
+}
+```
+
+### Utilisation du token
+
+Toutes les routes protegees necessitent un header `Authorization` :
+
+```bash
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+```
+
+### Profil
+
+```bash
+GET /api/auth/me
+Authorization: Bearer <token>
+```
+
+### Comptes de test (donnees seedees)
+
+| Email | Mot de passe | Role |
+|---|---|---|
+| admin@omniacom.fr | admin123 | ADMIN |
+| pmo@omniacom.fr | pmo123 | PMO |
+| planning@omniacom.fr | planning123 | GESTIONNAIRE_PLANNING |
+| epi@omniacom.fr | epi123 | GESTIONNAIRE_EPI |
+| tech@omniacom.fr | tech123 | UTILISATEUR |
+
+---
+
+## Politiques d'acces (RBAC)
+
+Le controle d'acces est centralise dans `src/middlewares/authorize.js`.
+
+### Principe
+
+Chaque route est protegee par deux middlewares enchaines :
+
+```
+authenticate  ->  verifie le token JWT et attache req.user
+authorize     ->  verifie que le role a le droit d'effectuer l'action sur la ressource
+```
+
+### Matrice des droits
+
+| Role | Lire | Creer | Modifier | Supprimer |
+|---|---|---|---|---|
+| ADMIN | Toutes ressources | Toutes ressources | Toutes ressources | Toutes ressources |
+| PMO | Toutes ressources | Toutes ressources | Toutes ressources | - |
+| GESTIONNAIRE_PLANNING | Interventions, Techniciens, Sites | Interventions | Interventions | - |
+| GESTIONNAIRE_EPI | A definir | A definir | A definir | - |
+| UTILISATEUR | Son propre profil | - | - | - |
+
+### Filtrage des donnees
+
+En plus du controle d'acces au niveau des routes, un filtre est applique au niveau des donnees renvoyees (`filterOutput`) :
+
+- Un **UTILISATEUR** ne recoit que ses propres donnees (filtre par `id`)
+- Les autres roles recoivent l'integralite des donnees autorisees
+
+### Ajouter une nouvelle politique
+
+Les droits sont definis dans `src/middlewares/authorize.js` :
+
+```javascript
+const policies = {
+  ADMIN: {
+    can(action, resource) { return true; },
+  },
+  NOUVEAU_ROLE: {
+    can(action, resource) {
+      const autorise = ["ModeleA", "ModeleB"];
+      if (action === "read") return autorise.includes(resource);
+      return false;
+    },
+  },
+};
+```
 
 ---
 
 ## API disponibles
 
+### Authentification
+
+| Methode | URL | Auth | Description |
+|---|---|---|---|
+| `POST` | `/api/auth/register` | Non | Inscription |
+| `POST` | `/api/auth/login` | Non | Connexion |
+| `GET` | `/api/auth/me` | Bearer | Profil connecte |
+
+### Ressources (toutes protegees par Bearer + RBAC)
+
 | Methode | URL | Description |
 |---|---|---|
-| `GET` | `/api` | Verifier que l'API fonctionne |
-| `GET` | `/api/exemple` | Liste d'exemple (apres activation du modele) |
-| `GET` | `/api/exemple/:id` | Detail d'un element d'exemple |
-| `POST` | `/api/exemple` | Creer un element d'exemple |
-| `PUT` | `/api/exemple/:id` | Mettre a jour un element d'exemple |
-| `DELETE` | `/api/exemple/:id` | Supprimer un element d'exemple |
+| `GET` | `/api/utilisateurs` | Liste des utilisateurs |
+| `GET` | `/api/utilisateurs/{id}` | Detail d'un utilisateur |
+| `POST` | `/api/utilisateurs` | Creer un utilisateur |
+| `PUT` | `/api/utilisateurs/{id}` | Mettre a jour |
+| `DELETE` | `/api/utilisateurs/{id}` | Supprimer |
+| `GET` | `/api/techniciens` | Liste des techniciens |
+| `GET` | `/api/techniciens/{id}` | Detail d'un technicien |
+| `POST` | `/api/techniciens` | Creer un technicien |
+| `PUT` | `/api/techniciens/{id}` | Mettre a jour |
+| `DELETE` | `/api/techniciens/{id}` | Supprimer |
+| `GET` | `/api/sites` | Liste des sites |
+| `GET` | `/api/sites/{id}` | Detail d'un site |
+| `POST` | `/api/sites` | Creer un site |
+| `PUT` | `/api/sites/{id}` | Mettre a jour |
+| `DELETE` | `/api/sites/{id}` | Supprimer |
+| `GET` | `/api/interventions` | Liste des interventions |
+| `GET` | `/api/interventions/{id}` | Detail d'une intervention |
+| `POST` | `/api/interventions` | Creer une intervention |
+| `PUT` | `/api/interventions/{id}` | Mettre a jour |
+| `DELETE` | `/api/interventions/{id}` | Supprimer |
+| `GET` | `/api/equipements` | Liste des equipements |
+| `GET` | `/api/equipements/{id}` | Detail d'un equipement |
+| `POST` | `/api/equipements` | Creer un equipement |
+| `PUT` | `/api/equipements/{id}` | Mettre a jour |
+| `DELETE` | `/api/equipements/{id}` | Supprimer |
+| `GET` | `/api/verifications-epi` | Liste des verifications EPI |
+| `GET` | `/api/verifications-epi/{id}` | Detail |
+| `POST` | `/api/verifications-epi` | Creer |
+| `PUT` | `/api/verifications-epi/{id}` | Mettre a jour |
+| `DELETE` | `/api/verifications-epi/{id}` | Supprimer |
+| `GET` | `/api/presences` | Liste des presences |
+| `GET` | `/api/presences/{id}` | Detail |
+| `POST` | `/api/presences` | Creer |
+| `PUT` | `/api/presences/{id}` | Mettre a jour |
+| `DELETE` | `/api/presences/{id}` | Supprimer |
+| `GET` | `/api/chantiers` | Liste des chantiers |
+| `GET` | `/api/chantiers/{id}` | Detail |
+| `POST` | `/api/chantiers` | Creer |
+| `PUT` | `/api/chantiers/{id}` | Mettre a jour |
+| `DELETE` | `/api/chantiers/{id}` | Supprimer |
+| `GET` | `/api/bons-de-commande` | Liste des bons de commande |
+| `GET` | `/api/bons-de-commande/{id}` | Detail |
+| `POST` | `/api/bons-de-commande` | Creer |
+| `PUT` | `/api/bons-de-commande/{id}` | Mettre a jour |
+| `DELETE` | `/api/bons-de-commande/{id}` | Supprimer |
+| `GET` | `/api/etapes-chantier` | Liste des etapes chantier |
+| `GET` | `/api/etapes-chantier/{id}` | Detail |
+| `POST` | `/api/etapes-chantier` | Creer |
+| `PUT` | `/api/etapes-chantier/{id}` | Mettre a jour |
+| `DELETE` | `/api/etapes-chantier/{id}` | Supprimer |
+| `GET` | `/api/lignes-facturation` | Liste des lignes de facturation |
+| `GET` | `/api/lignes-facturation/{id}` | Detail |
+| `POST` | `/api/lignes-facturation` | Creer |
+| `PUT` | `/api/lignes-facturation/{id}` | Mettre a jour |
+| `DELETE` | `/api/lignes-facturation/{id}` | Supprimer |
+| `GET` | `/api/epi-equipements` | Liste des liaisons EPI-Equipements |
 
 ### Format des reponses
 
@@ -372,29 +378,167 @@ Les annotations utilisent le standard **OpenAPI 3.1.0**. Consultez la [documenta
 {
   "success": false,
   "statusCode": 404,
-  "message": "Utilisateur introuvable"
+  "message": "Ressource introuvable"
 }
 ```
 
 ---
 
+## Generateur de code automatique
+
+Le generateur (`scripts/generate/index.js`) produit automatiquement le service, le controleur, les routes et les annotations OpenAPI a partir d'un modele Prisma.
+
+### Utilisation
+
+```bash
+# Mode interactif (choisir le modele dans la liste)
+npm run generate
+
+# Mode direct (generer pour un modele specifique)
+npm run generate -- --model Categorie
+
+# Generer tous les modeles d'un coup
+npm run generate -- --all
+
+# Apercu sans ecrire
+npm run generate -- --all --dry-run
+
+# Generer seulement certaines couches
+npm run generate -- --model Modele --skip-controller
+```
+
+### Options
+
+| Option | Description |
+|---|---|
+| `--model <Nom>` | Modele specifique |
+| `--all` | Tous les modeles |
+| `--dry-run` | Apercu sans ecriture |
+| `--skip-service` | Sans le service |
+| `--skip-controller` | Sans le controleur |
+| `--skip-routes` | Sans les routes |
+| `--help` | Affiche l'aide |
+
+### Ce qui est genere
+
+Pour un modele `Categorie` :
+
+```
+src/services/categorie.service.js      CRUD complet (findAll, findById, create, update, remove)
+src/controllers/categorie.controller.js 5 handlers HTTP + @openapi JSDoc
+src/routes/categorie.routes.js          5 routes REST + middleware auth + RBAC
+src/routes/index.js                      Enregistrement automatique de la route
+```
+
+### Fonctionnalites du generateur
+
+- Analyse le schema Prisma pour detecter les modeles, champs, types et relations
+- Detecte automatiquement le type de l'ID (`Int` ou `String`/UUID) et adapte le code
+- Genere les annotations OpenAPI avec les types corrects
+- Protege les routes avec `authenticate` + `authorize`
+- Ajoute le filtre `filterOutput` dans les controleurs
+- Integre les nouvelles routes dans `routes/index.js` au bon endroit
+
+---
+
+## Remplissage de la base (Seed)
+
+Le fichier `prisma/seed.js` remplit la base avec des donnees de test realistes.
+
+### Execution
+
+```bash
+npm run prisma:seed
+```
+
+Le seeder s'execute automatiquement apres `npx prisma migrate dev` si la configuration `prisma.seed` est definie dans `package.json`.
+
+### Donnees inserees
+
+| Table | Nb | Details |
+|---|---|---|
+| Utilisateurs | 5 | admin, pmo, planning, epi, tech |
+| Techniciens | 5 | Martin, Bernard, Dubois, Petit, Moreau |
+| Sites | 6 | Paris, Lyon, Marseille, Bordeaux, Lille, Toulouse |
+| Equipements | 8 | Casques, gants, harnais, detecteurs, etc. |
+| Chantiers | 5 | En cours, termines, bloques par le proprietaire |
+| Interventions | 8 | Liees aux sites et techniciens |
+| Verifications EPI | 4 | Dont 2 en retard |
+| Presences | 6 | PRESENT, ABSENT, MALADIE |
+| Etapes chantier | 14 | Reparties sur 3 chantiers |
+| Bons de commande | 6 | Avec montants et soldes |
+| Lignes facturation | 6 | PAYEES et NON_PAYEES |
+| Liaisons EPI-Equipements | 9 | Liens many-to-many |
+
+### Nettoyage automatique
+
+Le seeder supprime toutes les donnees existantes avant de re-inserer, dans l'ordre inverse des dependances. Il peut donc etre execute plusieurs fois sans risque.
+
+---
+
+## Documentation Swagger
+
+### Interface Swagger UI
+
+Lancez le serveur et ouvrez :
+
+```
+http://localhost:3000/api-docs
+```
+
+L'interface permet de visualiser tous les endpoints, lire les schemas, et tester chaque route directement.
+
+### Export Postman
+
+```bash
+# Fichier statique
+npm run openapi:generate
+
+# Ou depuis le serveur en cours
+http://localhost:3000/api/openapi.json
+```
+
+Puis importez dans Postman via `Import -> Files` ou `Import -> Link`.
+
+---
+
+## Scripts disponibles
+
+| Commande | Description |
+|---|---|
+| `npm run dev` | Demarre le serveur en developpement (nodemon) |
+| `npm start` | Demarre le serveur en production |
+| `npm run prisma:generate` | Genere le client Prisma |
+| `npm run prisma:migrate` | Applique les migrations |
+| `npm run prisma:reset` | Reinitialise la base de donnees |
+| `npm run prisma:studio` | Interface graphique Prisma Studio |
+| `npm run prisma:seed` | Remplit la base avec des donnees de test |
+| `npm run generate` | Lance le generateur de code CRUD |
+| `npm run openapi:generate` | Genere le fichier `openapi.json` |
+| `npm run setup` | Installation complete |
+
+---
+
 ## Technologies
 
-- [Express](https://expressjs.com/fr/) — Framework web pour Node.js
-- [Prisma](https://www.prisma.io/) — ORM moderne pour Node.js
+- [Express](https://expressjs.com/fr/) — Framework web Node.js
+- [Prisma](https://www.prisma.io/) — ORM pour Node.js (v7)
 - [PostgreSQL](https://www.postgresql.org/) — Base de donnees relationnelle
-- [Morgan](https://github.com/expressjs/morgan) — Logger HTTP pour Express
-- [Dotenv](https://github.com/motdotla/dotenv) — Chargement des variables d'environnement
-- [Nodemon](https://nodemon.io/) — Rechargement automatique en developpement
-- [CORS](https://github.com/expressjs/cors) — Gestion des requetes cross-origin
+- [jsonwebtoken](https://github.com/auth0/node-jsonwebtoken) — Tokens JWT
+- [bcryptjs](https://github.com/dcodeIO/bcryptjs) — Hashing de mots de passe
+- [Morgan](https://github.com/expressjs/morgan) — Logger HTTP
+- [Dotenv](https://github.com/motdotla/dotenv) — Variables d'environnement
+- [Swagger UI Express](https://github.com/scottie1984/swagger-ui-express) — Documentation interactive
+- [swagger-jsdoc](https://github.com/Surnet/swagger-jsdoc) — Generation OpenAPI
+- [Nodemon](https://nodemon.io/) — Rechargement automatique
+- [CORS](https://github.com/expressjs/cors) — Requetes cross-origin
+- [Cross-env](https://github.com/kentcdodds/cross-env) — Variables d'environnement multi-plateforme
 
 ---
 
 ## Documentation complementaire
 
-- [OpenAPI Specification](https://swagger.io/specification/) — Standard de documentation d'API
-- [Swagger UI Express](https://github.com/scottie1984/swagger-ui-express) — Interface Swagger pour Express
-- [swagger-jsdoc](https://github.com/Surnet/swagger-jsdoc) — Generation de la spec via les annotations JSDoc
+- [CONTRIBUTING.md](./CONTRIBUTING.md) — Standards de code, Git, PR
+- [OpenAPI Specification](https://swagger.io/specification/)
 - [Prisma Documentation](https://www.prisma.io/docs)
 - [Express Guide](https://expressjs.com/en/guide/routing.html)
-- [Prisma Client CRUD](https://www.prisma.io/docs/orm/prisma-client/queries/crud)

@@ -9,8 +9,24 @@ import { ApiError } from "../utils/ApiError.js";
  * Recupere tous les equipementss.
  * @returns {Promise<Array>} Liste des equipementss
  */
-export async function findAll() {
-  return prisma.equipements.findMany();
+export async function findAll(page = 1, pageSize = 20) {
+  const skip = (page - 1) * pageSize;
+
+  const [data, total] = await Promise.all([
+    prisma.equipements.findMany({
+      skip,
+      take: pageSize,
+    }),
+    prisma.equipements.count(),
+  ]);
+
+  return {
+    data,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 /**

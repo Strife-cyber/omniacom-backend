@@ -9,8 +9,24 @@ import { ApiError } from "../utils/ApiError.js";
  * Recupere tous les sites.
  * @returns {Promise<Array>} Liste des sites
  */
-export async function findAll() {
-  return prisma.site.findMany();
+export async function findAll(page = 1, pageSize = 20) {
+  const skip = (page - 1) * pageSize;
+
+  const [data, total] = await Promise.all([
+    prisma.site.findMany({
+      skip,
+      take: pageSize,
+    }),
+    prisma.site.count(),
+  ]);
+
+  return {
+    data,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 /**

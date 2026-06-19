@@ -23,6 +23,7 @@ app.use(morgan(isProduction ? "combined" : "dev"));
 // Documentation Swagger
 app.use(
   "/api-docs",
+
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, {
     customSiteTitle: "OmniaCom API - Documentation",

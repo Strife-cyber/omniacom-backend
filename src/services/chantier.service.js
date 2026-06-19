@@ -9,8 +9,24 @@ import { ApiError } from "../utils/ApiError.js";
  * Recupere tous les chantiers.
  * @returns {Promise<Array>} Liste des chantiers
  */
-export async function findAll() {
-  return prisma.chantier.findMany();
+export async function findAll(page = 1, pageSize = 20) {
+  const skip = (page - 1) * pageSize;
+
+  const [data, total] = await Promise.all([
+    prisma.chantier.findMany({
+      skip,
+      take: pageSize,
+    }),
+    prisma.chantier.count(),
+  ]);
+
+  return {
+    data,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 /**

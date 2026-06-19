@@ -9,8 +9,24 @@ import { ApiError } from "../utils/ApiError.js";
  * Recupere tous les etape-chantiers.
  * @returns {Promise<Array>} Liste des etape-chantiers
  */
-export async function findAll() {
-  return prisma.etapeChantier.findMany();
+export async function findAll(page = 1, pageSize = 20) {
+  const skip = (page - 1) * pageSize;
+
+  const [data, total] = await Promise.all([
+    prisma.etapeChantier.findMany({
+      skip,
+      take: pageSize,
+    }),
+    prisma.etapeChantier.count(),
+  ]);
+
+  return {
+    data,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 /**

@@ -9,8 +9,24 @@ import { ApiError } from "../utils/ApiError.js";
  * Recupere tous les bon-de-commandes.
  * @returns {Promise<Array>} Liste des bon-de-commandes
  */
-export async function findAll() {
-  return prisma.bonDeCommande.findMany();
+export async function findAll(page = 1, pageSize = 20) {
+  const skip = (page - 1) * pageSize;
+
+  const [data, total] = await Promise.all([
+    prisma.bonDeCommande.findMany({
+      skip,
+      take: pageSize,
+    }),
+    prisma.bonDeCommande.count(),
+  ]);
+
+  return {
+    data,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 /**

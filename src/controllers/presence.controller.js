@@ -30,8 +30,19 @@ import { filterOutput } from "../middlewares/authorize.js";
  */
 export async function getAll(req, res, next) {
   try {
-    const items = await service.findAll();
-    res.json({ success: true, data: filterOutput(req.user, items, "Presence") });
+    const page = Number(req.query.page) || 1;
+    const pageSize = Number(req.query.pageSize) || 20;
+
+    const result = await service.findAll(page, pageSize);
+
+    res.json({
+      success: true,
+      data: filterOutput(req.user, result.data, "Presence"),
+      total: result.total,
+      page: result.page,
+      pageSize: result.pageSize,
+      totalPages: result.totalPages,
+    });
   } catch (err) {
     next(err);
   }

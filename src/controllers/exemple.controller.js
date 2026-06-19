@@ -26,8 +26,19 @@ import * as service from "../services/exemple.service.js";
  */
 export async function getAll(req, res, next) {
   try {
-    const items = await service.findAll();
-    res.json({ success: true, data: items });
+    const page = Number(req.query.page) || 1;
+    const pageSize = Number(req.query.pageSize) || 20;
+
+    const result = await service.findAll(page, pageSize);
+
+    res.json({
+      success: true,
+      data: result.data,
+      total: result.total,
+      page: result.page,
+      pageSize: result.pageSize,
+      totalPages: result.totalPages,
+    });
   } catch (err) {
     next(err);
   }

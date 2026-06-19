@@ -9,8 +9,24 @@ import { ApiError } from "../utils/ApiError.js";
  * Recupere tous les utilisateurs.
  * @returns {Promise<Array>} Liste des utilisateurs
  */
-export async function findAll() {
-  return prisma.utilisateur.findMany();
+export async function findAll(page = 1, pageSize = 20) {
+  const skip = (page - 1) * pageSize;
+
+  const [data, total] = await Promise.all([
+    prisma.utilisateur.findMany({
+      skip,
+      take: pageSize,
+    }),
+    prisma.utilisateur.count(),
+  ]);
+
+  return {
+    data,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 /**

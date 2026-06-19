@@ -9,8 +9,24 @@ import { ApiError } from "../utils/ApiError.js";
  * Recupere tous les ligne-facturations.
  * @returns {Promise<Array>} Liste des ligne-facturations
  */
-export async function findAll() {
-  return prisma.ligneFacturation.findMany();
+export async function findAll(page = 1, pageSize = 20) {
+  const skip = (page - 1) * pageSize;
+
+  const [data, total] = await Promise.all([
+    prisma.ligneFacturation.findMany({
+      skip,
+      take: pageSize,
+    }),
+    prisma.ligneFacturation.count(),
+  ]);
+
+  return {
+    data,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 /**

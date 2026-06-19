@@ -9,8 +9,24 @@ import { ApiError } from "../utils/ApiError.js";
  * Recupere tous les presences.
  * @returns {Promise<Array>} Liste des presences
  */
-export async function findAll() {
-  return prisma.presence.findMany();
+export async function findAll(page = 1, pageSize = 20) {
+  const skip = (page - 1) * pageSize;
+
+  const [data, total] = await Promise.all([
+    prisma.presence.findMany({
+      skip,
+      take: pageSize,
+    }),
+    prisma.presence.count(),
+  ]);
+
+  return {
+    data,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 /**

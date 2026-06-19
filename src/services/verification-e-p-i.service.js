@@ -9,8 +9,24 @@ import { ApiError } from "../utils/ApiError.js";
  * Recupere tous les verification-e-p-is.
  * @returns {Promise<Array>} Liste des verification-e-p-is
  */
-export async function findAll() {
-  return prisma.verificationEPI.findMany();
+export async function findAll(page = 1, pageSize = 20) {
+  const skip = (page - 1) * pageSize;
+
+  const [data, total] = await Promise.all([
+    prisma.verificationEPI.findMany({
+      skip,
+      take: pageSize,
+    }),
+    prisma.verificationEPI.count(),
+  ]);
+
+  return {
+    data,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 /**

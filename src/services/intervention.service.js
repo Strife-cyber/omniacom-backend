@@ -9,8 +9,24 @@ import { ApiError } from "../utils/ApiError.js";
  * Recupere tous les interventions.
  * @returns {Promise<Array>} Liste des interventions
  */
-export async function findAll() {
-  return prisma.intervention.findMany();
+export async function findAll(page = 1, pageSize = 20) {
+  const skip = (page - 1) * pageSize;
+
+  const [data, total] = await Promise.all([
+    prisma.intervention.findMany({
+      skip,
+      take: pageSize,
+    }),
+    prisma.intervention.count(),
+  ]);
+
+  return {
+    data,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 /**

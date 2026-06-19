@@ -9,10 +9,25 @@ import { ApiError } from "../utils/ApiError.js";
  * Recupere tous les techniciens.
  * @returns {Promise<Array>} Liste des techniciens
  */
-export async function findAll() {
-  return prisma.technicien.findMany();
-}
+export async function findAll(page = 1, pageSize = 20) {
+  const skip = (page - 1) * pageSize;
 
+  const [data, total] = await Promise.all([
+    prisma.technicien.findMany({
+      skip,
+      take: pageSize,
+    }),
+    prisma.technicien.count(),
+  ]);
+
+  return {
+    data,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
+}
 /**
  * Recupere un technicien par son ID.
  * @param {number} id - Identifiant du technicien

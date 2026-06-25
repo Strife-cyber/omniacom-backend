@@ -32,8 +32,9 @@ export async function getAll(req, res, next) {
   try {
     const page = Number(req.query.page) || 1;
     const pageSize = Number(req.query.pageSize) || 20;
+    const { technicienId, nom, mois, annee } = req.query;
 
-    const result = await service.findAll(page, pageSize);
+    const result = await service.findAll(page, pageSize, { technicienId, nom, mois, annee });
 
     res.json({
       success: true,

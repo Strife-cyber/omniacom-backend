@@ -5,14 +5,12 @@ import utilisateurRoutes from "./utilisateur.routes.js";
 import technicienRoutes from "./technicien.routes.js";
 import siteRoutes from "./site.routes.js";
 import interventionRoutes from "./intervention.routes.js";
-import equipementsRoutes from "./equipements.routes.js";
 import verificationEPIRoutes from "./verification-e-p-i.routes.js";
 import presenceRoutes from "./presence.routes.js";
 import chantierRoutes from "./chantier.routes.js";
 import bonDeCommandeRoutes from "./bon-de-commande.routes.js";
 import etapeChantierRoutes from "./etape-chantier.routes.js";
 import ligneFacturationRoutes from "./ligne-facturation.routes.js";
-import verificationEPI_EquipementRoutes from "./verification-e-p-i_-equipement.routes.js";
 
 const router = Router();
 
@@ -22,14 +20,12 @@ router.use("/utilisateurs", utilisateurRoutes);
 router.use("/techniciens", technicienRoutes);
 router.use("/sites", siteRoutes);
 router.use("/interventions", interventionRoutes);
-router.use("/equipements", equipementsRoutes);
 router.use("/verifications-epi", verificationEPIRoutes);
 router.use("/presences", presenceRoutes);
 router.use("/chantiers", chantierRoutes);
 router.use("/bons-de-commande", bonDeCommandeRoutes);
 router.use("/etapes-chantier", etapeChantierRoutes);
 router.use("/lignes-facturation", ligneFacturationRoutes);
-router.use("/epi-equipements", verificationEPI_EquipementRoutes);
 
 /**
  * @openapi

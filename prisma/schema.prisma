@@ -7,13 +7,6 @@ datasource db {
   provider = "postgresql"
 }
 
-// =============================================================================
-// EXEMPLE DE MODELE : Utilisateur
-// =============================================================================
-// Decommentez et adaptez ce modele pour commencer.
-// Supprimez-le ou remplacez-le par vos propres modeles.
-// =============================================================================
-
 model Utilisateur {
   id        Int      @id @default(autoincrement())
   email     String   @unique
@@ -36,11 +29,11 @@ enum Role {
 
 
 model Technicien {
-  id        Int      @id @default(autoincrement())
+  id        Int              @id @default(autoincrement())
   nom       String
   prenom    String
   telephone String
-  status    TechnicienStatut
+  status    TechnicienStatut @default(ACTIF)
 
   interventions    Intervention[]
   verificationsEPI VerificationEPI[]
@@ -98,41 +91,21 @@ enum InterventionStatut {
   REPORTE
 }
 
-model Equipements {
-  id        Int      @id @default(autoincrement())
-  nom       String
-  status    EquipementStatut
-
-  @@map("equipements")
-}
-
-enum EquipementStatut {
-  CONFORME
-  EN_RETARD
-  DEFECTUEUX
-  HORS_SERVICE
-}
 
 model VerificationEPI {
   id                   Int                     @id @default(autoincrement())
   technicienId         Int                     @map("technicien_id")
-  dateDerniereVerif    DateTime                @default(now()) @map("date_derniere_verif")
+  dateDerniereVerif    DateTime?               @map("date_derniere_verif")
   dateDemande          DateTime                @map("date_demande")
-  dateEnvoie           DateTime                @map("date_envoie")
-  joursRetard          Int
-  prochaineDate        DateTime                @map("prochaine_date")
-  statut               VerificationEPIStatut
+  dateEnvoie           DateTime?               @map("date_envoie")
+  joursRetard          Int                     @default(0)
+  prochaineDate        DateTime?               @map("prochaine_date")
 
   technicien           Technicien              @relation(fields: [technicienId], references: [id])
 
   @@map("verification_epi")
 }
 
-enum VerificationEPIStatut {
-  CONFORME
-  EN_RETARD
-  DEFECTUEUX
-}
 
 model Presence {
   id               Int                     @id @default(autoincrement())
@@ -218,8 +191,8 @@ enum EtapeChantierStatut {
 model LigneFacturation {
   id                   Int                     @id @default(autoincrement())
   bonDeCommandeId      Int                     @map("bon_de_commande_id")
-  montantHt            Decimal                 @db.Decimal(15, 2) @map("montant_ht")
-  statutPaiement       String                  @map("statut_paiement")
+  montantHt            Decimal                    @db.Decimal(15, 2) @map("montant_ht")
+  statutPaiement       LigneFacturationStatut     @default(NOT_PAID) @map("statut_paiement")
   dateFacture          DateTime                @map("date_facture")
   description          String
   bonDeCommande        BonDeCommande           @relation(fields: [bonDeCommandeId], references: [id])
@@ -232,10 +205,3 @@ enum LigneFacturationStatut {
   NOT_PAID
 }
 
-model VerificationEPI_Equipement {
-  verificationEpiId Int @map("verification_epi_id")
-  equipementsId     Int @map("equipements_id")
-
-  @@id([verificationEpiId, equipementsId])
-  @@map("verification_epi_equipement")
-}

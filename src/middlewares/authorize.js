@@ -62,19 +62,31 @@ const policies = {
     can(action, resource) {
       const ressourcesAutorisees = ["Intervention", "Technicien", "Site"];
       if (action === "read") return ressourcesAutorisees.includes(resource);
-      if (action === "create") return resource === "Intervention";
-      if (action === "update") return resource === "Intervention";
+      if (action === "create") return ["Intervention", "Technicien"].includes(resource);
+      if (action === "update") return ["Intervention", "Technicien"].includes(resource);
+      if (action === "delete") return resource === "Technicien";
       return false;
     },
     description: "Gere les interventions, consulte techniciens et sites",
   },
 
-  // GESTIONNAIRE_EPI : lit/modifie les donnees EPI (a definir)
+  // GESTIONNAIRE_EPI : acces complet aux ressources EPI, lecture techniciens
   GESTIONNAIRE_EPI: {
     can(action, resource) {
-      return false; // A definir selon vos besoins
+      const ressourcesEPI = ["VerificationEPI", "Equipements", "VerificationEPI_Equipement"];
+      if (ressourcesEPI.includes(resource)) return true;
+      if (action === "read" && resource === "Technicien") return true;
+      return false;
     },
     description: "Gere les equipements de protection individuels",
+  },
+
+  // PMO : lecture seule sur toutes les ressources
+  PMO: {
+    can(action, resource) {
+      return action === "read";
+    },
+    description: "Consultation globale en lecture seule",
   },
 
   // UTILISATEUR : acces minimal, lecture seule de son propre profil

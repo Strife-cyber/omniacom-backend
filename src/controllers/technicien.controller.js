@@ -31,7 +31,7 @@ import { filterOutput } from "../middlewares/authorize.js";
 export async function getAll(req, res, next) {
   try {
     const page = Number(req.query.page) || 1;
-    const pageSize = Number(req.query.pageSize) || 20;
+    const pageSize = Number(req.query.pageSize) || 100;
 
     const result = await service.findAll(page, pageSize);
 

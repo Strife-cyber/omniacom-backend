@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import morgan from "morgan";
 import swaggerUi from "swagger-ui-express";
-import { CORS_ORIGINS, isProduction } from "./config/env.js";
+import { CORS_ORIGINS, isProduction, UPLOADS_DIR } from "./config/env.js";
 import { swaggerSpec } from "./config/swagger.js";
 import routes from "./routes/index.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
@@ -19,6 +19,7 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan(isProduction ? "combined" : "dev"));
+app.use("/uploads", express.static(UPLOADS_DIR));
 
 // Documentation Swagger
 app.use(

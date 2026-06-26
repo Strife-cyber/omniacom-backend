@@ -53,6 +53,11 @@ export async function update(id, data) {
   return prisma.utilisateur.update({ where: { id: id }, data });
 }
 
+export async function setPhotoUrl(id, photoUrl) {
+  await findById(id);
+  return prisma.utilisateur.update({ where: { id }, data: { photoUrl } });
+}
+
 /**
  * Supprime un utilisateur.
  * @param {number} id - Identifiant du utilisateur

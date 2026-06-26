@@ -30,7 +30,7 @@ import { filterOutput } from "../middlewares/authorize.js";
  */
 export async function getAll(req, res, next) {
   try {
-    const items = await service.findAll();
+    const items = await service.findAll(req.query);
     res.json({ success: true, data: filterOutput(req.user, items, "EtapeChantier") });
   } catch (err) {
     next(err);

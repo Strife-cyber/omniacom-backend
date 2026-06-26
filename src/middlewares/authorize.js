@@ -13,6 +13,24 @@ import { ApiError } from "../utils/ApiError.js";
  * @param {string} ressource - Le modele concerne : "Utilisateur" | "Technicien" | "Site" | "Intervention"
  * @returns {Function} Middleware Express
  */
+/** Autorise l upload de photo profil pour soi-meme ou pour un admin. */
+export function authorizeUserPhoto(req, res, next) {
+  try {
+    if (!req.user) {
+      throw new ApiError(401, "Authentification requise");
+    }
+    const id = parseInt(req.params.id, 10);
+    if (req.user.role === "ADMIN" || id === req.user.id) {
+      next();
+      return;
+    }
+    throw new ApiError(403, "Acces interdit : vous ne pouvez modifier que votre propre photo");
+  } catch (err) {
+    if (err instanceof ApiError) return next(err);
+    next(new ApiError(403, "Autorisation echouee"));
+  }
+}
+
 export function authorize(action, ressource) {
   return (req, res, next) => {
     try {
@@ -57,24 +75,40 @@ const policies = {
     description: "Acces total a toutes les ressources",
   },
 
-  // GESTIONNAIRE_PLANNING : lit les plannings, techniciens, sites
+  // GESTIONNAIRE_PLANNING : interventions, techniciens, sites et presences
   GESTIONNAIRE_PLANNING: {
     can(action, resource) {
-      const ressourcesAutorisees = ["Intervention", "Technicien", "Site"];
-      if (action === "read") return ressourcesAutorisees.includes(resource);
-      if (action === "create") return resource === "Intervention";
-      if (action === "update") return resource === "Intervention";
-      return false;
+      const ressourcesAutorisees = ["Intervention", "Technicien", "Site", "Presence"];
+      return ressourcesAutorisees.includes(resource);
     },
-    description: "Gere les interventions, consulte techniciens et sites",
+    description: "Gere les interventions, techniciens, sites et feuilles de presence",
   },
 
-  // GESTIONNAIRE_EPI : lit/modifie les donnees EPI (a definir)
+  // GESTIONNAIRE_EPI : lit/modifie les donnees EPI
   GESTIONNAIRE_EPI: {
     can(action, resource) {
-      return false; // A definir selon vos besoins
+      const ressourcesAutorisees = [
+        "Equipements",
+        "VerificationEPI",
+        "VerificationEPI_Equipement",
+      ];
+      return ressourcesAutorisees.includes(resource);
     },
     description: "Gere les equipements de protection individuels",
+  },
+
+  // PMO : gestion des chantiers, bons de commande et facturation
+  PMO: {
+    can(action, resource) {
+      const ressourcesAutorisees = [
+        "Chantier",
+        "BonDeCommande",
+        "EtapeChantier",
+        "LigneFacturation",
+      ];
+      return ressourcesAutorisees.includes(resource);
+    },
+    description: "Gere les chantiers, bons de commande et suivi financier",
   },
 
   // UTILISATEUR : acces minimal, lecture seule de son propre profil
@@ -120,6 +154,16 @@ export function filterOutput(user, data, resource) {
 
   // GESTIONNAIRE_PLANNING voit tout sur ses ressources autorisees
   if (user.role === "GESTIONNAIRE_PLANNING") {
+    return data;
+  }
+
+  // PMO voit tout sur ses ressources autorisees
+  if (user.role === "PMO") {
+    return data;
+  }
+
+  // GESTIONNAIRE_EPI voit tout sur ses ressources autorisees
+  if (user.role === "GESTIONNAIRE_EPI") {
     return data;
   }
 

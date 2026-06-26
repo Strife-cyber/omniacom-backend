@@ -37,6 +37,15 @@ export async function getAll(req, res, next) {
   }
 }
 
+export async function getSummary(req, res, next) {
+  try {
+    const summary = await service.findSummary();
+    res.json({ success: true, data: filterOutput(req.user, summary, "BonDeCommande") });
+  } catch (err) {
+    next(err);
+  }
+}
+
 /**
  * @openapi
  * /api/bon-de-commandes/{id}:

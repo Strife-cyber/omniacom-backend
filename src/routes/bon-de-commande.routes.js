@@ -5,12 +5,7 @@ import * as controller from "../controllers/bon-de-commande.controller.js";
 
 const router = Router();
 
-// GET    /api/bon-de-commandes      -> Liste tous les bon-de-commandes
-// GET    /api/bon-de-commandes/{id} -> Detail d un bon-de-commande
-// POST   /api/bon-de-commandes      -> Creer un bon-de-commande
-// PUT    /api/bon-de-commandes/{id} -> Mettre a jour un bon-de-commande
-// DELETE /api/bon-de-commandes/{id} -> Supprimer un bon-de-commande
-
+router.get("/summary", authenticate, authorize("read", "BonDeCommande"), controller.getSummary);
 router.get("/", authenticate, authorize("read", "BonDeCommande"), controller.getAll);
 router.get("/:id", authenticate, authorize("read", "BonDeCommande"), controller.getById);
 router.post("/", authenticate, authorize("create", "BonDeCommande"), controller.create);

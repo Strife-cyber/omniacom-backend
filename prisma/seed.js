@@ -2,6 +2,8 @@ import { PrismaClient } from "../src/generated/client.ts";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import { config } from "dotenv";
+import { BONS_COMMANDE, CHANTIERS, LIGNES_PAR_BC } from "./data/omniacom-seed.js";
+import { ETAPES_MODELE } from "../src/constants/etapes-modele.js";
 
 config();
 
@@ -203,66 +205,53 @@ async function seedEquipements() {
 // ===========================================================================
 
 async function seedChantiers() {
-  console.log("  Chantiers...");
+  console.log("  Chantiers OMNIACOM...");
+  const bcMap = {};
+  const bons = await prisma.bonDeCommande.findMany();
+  for (const b of bons) bcMap[b.numeroBc] = b.id;
 
-  const chantiers = [
-    {
-      entreprise: "BatiConstruct SARL",
-      codeSite: "PAR-2024-001",
-      nomSite: "Residence Les Jardins d'Arcadie",
-      typeSite: "LOGEMENT_COLLECTIF",
-      status: "ON_GOING",
-      avancementPlanifie: 65.0,
-      avancementReel: 72.0,
-      dateGo: dateDepart(120),
-    },
-    {
-      entreprise: "RenovPlus SAS",
-      codeSite: "LYO-2024-002",
-      nomSite: "Immeuble Le Commercial",
-      typeSite: "BUREAUX",
-      status: "ON_GOING",
-      avancementPlanifie: 30.0,
-      avancementReel: 28.0,
-      dateGo: dateDepart(60),
-    },
-    {
-      entreprise: "Construxion France",
-      codeSite: "MAR-2024-003",
-      nomSite: "Pole Sante Marseille Sud",
-      typeSite: "SANTE",
-      status: "APD_ON_GOING",
-      avancementPlanifie: 10.0,
-      avancementReel: 8.0,
-      dateGo: dateDepart(30),
-    },
-    {
-      entreprise: "BatiConstruct SARL",
-      codeSite: "BOR-2024-004",
-      nomSite: "Ecole Primaire Jules Ferry",
-      typeSite: "EDUCATIF",
-      status: "DONE",
-      avancementPlanifie: 100.0,
-      avancementReel: 100.0,
-      dateGo: dateDepart(200),
-    },
-    {
-      entreprise: "GreenBat Eco",
-      codeSite: "LIL-2024-005",
-      nomSite: "Residence Les Terrasses",
-      typeSite: "LOGEMENT_COLLECTIF",
-      status: "LANDLORD_ISSUE",
-      avancementPlanifie: 50.0,
-      avancementReel: 35.0,
-      dateGo: dateDepart(90),
-    },
-  ];
-
-  for (const c of chantiers) {
-    await prisma.chantier.create({ data: c });
+  for (const modele of ETAPES_MODELE) {
+    await prisma.etapeModele.upsert({
+      where: { code: modele.code },
+      update: modele,
+      create: modele,
+    });
   }
 
-  console.log(`    ${chantiers.length} chantiers crees`);
+  for (const c of CHANTIERS) {
+    const rooftop = c.typeSite.toLowerCase().includes("rooftop") || c.typeSite.toLowerCase().includes("rt ");
+    const chantier = await prisma.chantier.create({
+      data: {
+        entreprise: "OMNIACOM",
+        codeSite: c.codeSite,
+        nomSite: c.nomSite,
+        typeSite: c.typeSite,
+        status: c.status,
+        comment: c.comment,
+        projet: c.projet,
+        hauteurTour: c.hauteurTour,
+        fournisseurTour: c.fournisseurTour,
+        prixSite: c.prixSite,
+        bonDeCommandeId: bcMap[c.numeroBc] ?? null,
+        dateGo: dateDepart(90),
+        avancementPlanifie: c.status === "DONE" ? 100 : 50,
+        avancementReel: c.status === "DONE" ? 100 : 30,
+      },
+    });
+    await prisma.etapeChantier.createMany({
+      data: ETAPES_MODELE.map((m) => ({
+        chantierId: chantier.id,
+        codeEtape: m.code,
+        nomEtape: m.libelle,
+        ordre: m.ordre,
+        status: rooftop && !m.actifPourRooftop ? "NON_APPLICABLE" : c.status === "DONE" ? "TERMINE" : "EN_ATTENTE",
+        datePlanifiee: dateDepart(60 - m.ordre),
+        dateReelle: c.status === "DONE" ? dateDepart(58 - m.ordre) : null,
+        retardJours: 0,
+      })),
+    });
+  }
+  console.log(`    ${CHANTIERS.length} chantiers OMNIACOM crees`);
 }
 
 // ===========================================================================
@@ -478,133 +467,7 @@ async function seedPresences() {
 // ===========================================================================
 
 async function seedEtapesChantier() {
-  console.log("  Etapes chantier...");
-
-  const chantiers = await prisma.chantier.findMany();
-
-  const etapes = [
-    // Chantier 1 (ON_GOING, 72% reel)
-    {
-      chantier: { connect: { id: chantiers[0].id } },
-      nomEtape: "Terrassement",
-      datePlanifiee: dateDepart(100),
-      dateReelle: dateDepart(98),
-      retardMinutes: 0,
-      status: "TERMINE",
-    },
-    {
-      chantier: { connect: { id: chantiers[0].id } },
-      nomEtape: "Fondations",
-      datePlanifiee: dateDepart(85),
-      dateReelle: dateDepart(82),
-      retardMinutes: 0,
-      status: "TERMINE",
-    },
-    {
-      chantier: { connect: { id: chantiers[0].id } },
-      nomEtape: "Structure porteuse",
-      datePlanifiee: dateDepart(60),
-      dateReelle: dateDepart(58),
-      retardMinutes: 0,
-      status: "TERMINE",
-    },
-    {
-      chantier: { connect: { id: chantiers[0].id } },
-      nomEtape: "Couverture",
-      datePlanifiee: dateDepart(35),
-      dateReelle: dateDepart(33),
-      retardMinutes: 0,
-      status: "TERMINE",
-    },
-    {
-      chantier: { connect: { id: chantiers[0].id } },
-      nomEtape: "Installations electriques",
-      datePlanifiee: dateDepart(20),
-      dateReelle: new Date(),
-      retardMinutes: 0,
-      status: "EN_COURS",
-    },
-    {
-      chantier: { connect: { id: chantiers[0].id } },
-      nomEtape: "Finitions interieures",
-      datePlanifiee: dateDansFutur(15),
-      dateReelle: new Date(),
-      retardMinutes: 0,
-      status: "EN_ATTENTE",
-    },
-    // Chantier 2 (ON_GOING, 28% reel)
-    {
-      chantier: { connect: { id: chantiers[1].id } },
-      nomEtape: "Demolition",
-      datePlanifiee: dateDepart(45),
-      dateReelle: dateDepart(43),
-      retardMinutes: 0,
-      status: "TERMINE",
-    },
-    {
-      chantier: { connect: { id: chantiers[1].id } },
-      nomEtape: "Gros oeuvre",
-      datePlanifiee: dateDepart(20),
-      dateReelle: dateDepart(22),
-      retardMinutes: 120,
-      status: "EN_RETARD",
-    },
-    {
-      chantier: { connect: { id: chantiers[1].id } },
-      nomEtape: "Facade",
-      datePlanifiee: dateDansFutur(20),
-      dateReelle: new Date(),
-      retardMinutes: 0,
-      status: "EN_ATTENTE",
-    },
-    // Chantier 4 (DONE)
-    {
-      chantier: { connect: { id: chantiers[3].id } },
-      nomEtape: "Terrassement",
-      datePlanifiee: dateDepart(180),
-      dateReelle: dateDepart(178),
-      retardMinutes: 0,
-      status: "TERMINE",
-    },
-    {
-      chantier: { connect: { id: chantiers[3].id } },
-      nomEtape: "Fondations",
-      datePlanifiee: dateDepart(160),
-      dateReelle: dateDepart(155),
-      retardMinutes: 0,
-      status: "TERMINE",
-    },
-    {
-      chantier: { connect: { id: chantiers[3].id } },
-      nomEtape: "Structure",
-      datePlanifiee: dateDepart(120),
-      dateReelle: dateDepart(118),
-      retardMinutes: 0,
-      status: "TERMINE",
-    },
-    {
-      chantier: { connect: { id: chantiers[3].id } },
-      nomEtape: "Toiture",
-      datePlanifiee: dateDepart(90),
-      dateReelle: dateDepart(88),
-      retardMinutes: 0,
-      status: "TERMINE",
-    },
-    {
-      chantier: { connect: { id: chantiers[3].id } },
-      nomEtape: "Amenagements exterieurs",
-      datePlanifiee: dateDepart(30),
-      dateReelle: dateDepart(28),
-      retardMinutes: 0,
-      status: "TERMINE",
-    },
-  ];
-
-  for (const e of etapes) {
-    await prisma.etapeChantier.create({ data: e });
-  }
-
-  console.log(`    ${etapes.length} etapes chantier crees`);
+  console.log("  Etapes chantier (deja creees avec les chantiers)");
 }
 
 // ===========================================================================
@@ -612,66 +475,21 @@ async function seedEtapesChantier() {
 // ===========================================================================
 
 async function seedBonsDeCommande() {
-  console.log("  Bons de commande...");
+  console.log("  Bons de commande OMNIACOM...");
 
-  const chantiers = await prisma.chantier.findMany();
-
-  const bdcs = [
-    {
-      chantier: { connect: { id: chantiers[0].id } },
-      numeroBc: "BC-2024-001",
-      montantPo: 45000.0,
-      montantFacture: 42350.0,
-      montantRestant: 2650.0,
-      projetAssocie: "Electricite",
-    },
-    {
-      chantier: { connect: { id: chantiers[0].id } },
-      numeroBc: "BC-2024-002",
-      montantPo: 32000.0,
-      montantFacture: 32000.0,
-      montantRestant: 0.0,
-      projetAssocie: "Plomberie",
-    },
-    {
-      chantier: { connect: { id: chantiers[1].id } },
-      numeroBc: "BC-2024-003",
-      montantPo: 28500.0,
-      montantFacture: 14250.0,
-      montantRestant: 14250.0,
-      projetAssocie: "Menuiserie",
-    },
-    {
-      chantier: { connect: { id: chantiers[3].id } },
-      numeroBc: "BC-2024-004",
-      montantPo: 15000.0,
-      montantFacture: 15000.0,
-      montantRestant: 0.0,
-      projetAssocie: "Peinture",
-    },
-    {
-      chantier: { connect: { id: chantiers[3].id } },
-      numeroBc: "BC-2024-005",
-      montantPo: 22000.0,
-      montantFacture: 19800.0,
-      montantRestant: 2200.0,
-      projetAssocie: "Carrelage",
-    },
-    {
-      chantier: { connect: { id: chantiers[4].id } },
-      numeroBc: "BC-2024-006",
-      montantPo: 18000.0,
-      montantFacture: 0.0,
-      montantRestant: 18000.0,
-      projetAssocie: "Isolation",
-    },
-  ];
-
-  for (const b of bdcs) {
-    await prisma.bonDeCommande.create({ data: b });
+  for (const b of BONS_COMMANDE) {
+    await prisma.bonDeCommande.create({
+      data: {
+        numeroBc: b.numeroBc,
+        montantPo: b.montantPo,
+        montantFacture: 0,
+        montantRestant: b.montantPo,
+        projetAssocie: b.projetAssocie,
+      },
+    });
   }
 
-  console.log(`    ${bdcs.length} bons de commande crees`);
+  console.log(`    ${BONS_COMMANDE.length} bons de commande crees`);
 }
 
 // ===========================================================================
@@ -679,60 +497,40 @@ async function seedBonsDeCommande() {
 // ===========================================================================
 
 async function seedLignesFacturation() {
-  console.log("  Lignes de facturation...");
+  console.log("  Lignes de facturation OMNIACOM...");
 
-  const bdcs = await prisma.bonDeCommande.findMany();
+  const bcMap = {};
+  const bons = await prisma.bonDeCommande.findMany();
+  for (const b of bons) bcMap[b.numeroBc] = b.id;
 
-  const lignes = [
-    {
-      bonDeCommande: { connect: { id: bdcs[0].id } },
-      montantHt: 12000.0,
-      statutPaiement: "PAID",
-      dateFacture: dateDepart(80),
-      description: "Cables electriques lot 1",
-    },
-    {
-      bonDeCommande: { connect: { id: bdcs[0].id } },
-      montantHt: 18000.0,
-      statutPaiement: "PAID",
-      dateFacture: dateDepart(50),
-      description: "Tableaux electriques",
-    },
-    {
-      bonDeCommande: { connect: { id: bdcs[0].id } },
-      montantHt: 12350.0,
-      statutPaiement: "NOT_PAID",
-      dateFacture: dateDepart(10),
-      description: "Interrupteurs et prises",
-    },
-    {
-      bonDeCommande: { connect: { id: bdcs[1].id } },
-      montantHt: 32000.0,
-      statutPaiement: "PAID",
-      dateFacture: dateDepart(30),
-      description: "Installation plomberie complete",
-    },
-    {
-      bonDeCommande: { connect: { id: bdcs[2].id } },
-      montantHt: 14250.0,
-      statutPaiement: "NOT_PAID",
-      dateFacture: dateDepart(5),
-      description: "Pose menuiseries exterieures",
-    },
-    {
-      bonDeCommande: { connect: { id: bdcs[3].id } },
-      montantHt: 15000.0,
-      statutPaiement: "PAID",
-      dateFacture: dateDepart(90),
-      description: "Peinture interieure",
-    },
-  ];
-
-  for (const l of lignes) {
-    await prisma.ligneFacturation.create({ data: l });
+  let count = 0;
+  for (const [numeroBc, lignes] of Object.entries(LIGNES_PAR_BC)) {
+    for (const l of lignes) {
+      await prisma.ligneFacturation.create({
+        data: {
+          bonDeCommandeId: bcMap[numeroBc],
+          montantHt: l.montantHt,
+          statutPaiement: l.statutPaiement,
+          description: "Import seed OMNIACOM",
+        },
+      });
+      count++;
+    }
   }
 
-  console.log(`    ${lignes.length} lignes de facturation crees`);
+  for (const b of bons) {
+    const lignes = await prisma.ligneFacturation.findMany({ where: { bonDeCommandeId: b.id } });
+    const montantFacture = lignes.reduce((s, x) => s + Number(x.montantHt), 0);
+    await prisma.bonDeCommande.update({
+      where: { id: b.id },
+      data: {
+        montantFacture,
+        montantRestant: Math.max(0, Number(b.montantPo) - montantFacture),
+      },
+    });
+  }
+
+  console.log(`    ${count} lignes de facturation crees`);
 }
 
 // ===========================================================================
@@ -804,7 +602,9 @@ async function main() {
   console.log("Nettoyage des donnees existantes...");
   await prisma.verificationEPI_Equipement.deleteMany();
   await prisma.ligneFacturation.deleteMany();
+  await prisma.chantierPhoto.deleteMany();
   await prisma.etapeChantier.deleteMany();
+  await prisma.etapeModele.deleteMany();
   await prisma.bonDeCommande.deleteMany();
   await prisma.presence.deleteMany();
   await prisma.verificationEPI.deleteMany();
@@ -822,12 +622,12 @@ async function main() {
   await seedTechniciens();
   await seedSites();
   await seedEquipements();
+  await seedBonsDeCommande();
   await seedChantiers();
   await seedInterventions();
   await seedVerificationsEPI();
   await seedPresences();
   await seedEtapesChantier();
-  await seedBonsDeCommande();
   await seedLignesFacturation();
   await seedLiaisonsEPI();
 

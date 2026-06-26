@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authenticate } from "../middlewares/authenticate.js";
-import { authorize } from "../middlewares/authorize.js";
+import { authorize, authorizeUserPhoto } from "../middlewares/authorize.js";
 import { uploadUserPhoto } from "../middlewares/upload.js";
 import * as controller from "../controllers/utilisateur.controller.js";
 
@@ -13,7 +13,7 @@ router.put("/:id", authenticate, authorize("update", "Utilisateur"), controller.
 router.post(
   "/:id/photo",
   authenticate,
-  authorize("update", "Utilisateur"),
+  authorizeUserPhoto,
   uploadUserPhoto,
   controller.uploadPhoto,
 );

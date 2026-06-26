@@ -14,9 +14,12 @@ import etapeChantierRoutes from "./etape-chantier.routes.js";
 import ligneFacturationRoutes from "./ligne-facturation.routes.js";
 import verificationEPI_EquipementRoutes from "./verification-e-p-i_-equipement.routes.js";
 
+import excelRoutes from "./excel.routes.js";
+
 const router = Router();
 
 router.use("/auth", authRoutes);
+router.use("/excel", excelRoutes);
 router.use("/exemple", exempleRoutes);
 router.use("/utilisateurs", utilisateurRoutes);
 router.use("/techniciens", technicienRoutes);

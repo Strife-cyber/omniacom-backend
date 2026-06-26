@@ -23,6 +23,8 @@ export const JWT_SECRET = process.env.JWT_SECRET || "fallback-dev-secret";
 export const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "24h";
 export const JWT_REFRESH_EXPIRES_IN =
   process.env.JWT_REFRESH_EXPIRES_IN || "7d";
+export const UPLOADS_DIR = process.env.UPLOADS_DIR || resolve(__dirname, "../../uploads");
+export const API_PUBLIC_URL = process.env.API_PUBLIC_URL || `http://localhost:${PORT}`;
 
 export const isDevelopment = NODE_ENV === "development";
 export const isProduction = NODE_ENV === "production";

@@ -1,5 +1,7 @@
 import * as service from "../services/utilisateur.service.js";
 import { filterOutput } from "../middlewares/authorize.js";
+import { buildUploadUrl } from "../middlewares/upload.js";
+import { API_PUBLIC_URL } from "../config/env.js";
 
 // =============================================================================
 // Controleur Utilisateur
@@ -200,6 +202,21 @@ export async function remove(req, res, next) {
     const id = parseInt(req.params.id, 10);
     await service.remove(id);
     res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function uploadPhoto(req, res, next) {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!req.file) {
+      res.status(400).json({ success: false, message: "Photo requise" });
+      return;
+    }
+    const photoUrl = `${API_PUBLIC_URL}${buildUploadUrl("users", req.file.filename)}`;
+    const item = await service.setPhotoUrl(id, photoUrl);
+    res.json({ success: true, data: filterOutput(req.user, item, "Utilisateur") });
   } catch (err) {
     next(err);
   }

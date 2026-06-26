@@ -1,0 +1,22 @@
+/** Catalogue des 19 jalons CW (Daily Reporting Tracker). */
+export const ETAPES_MODELE = [
+  { code: "SURVEY", libelle: "Site Survey + Soil test/Structure Analyses End date", ordre: 1, actifPourRooftop: true },
+  { code: "APD", libelle: "APD submission date", ordre: 2, actifPourRooftop: true },
+  { code: "MOBILIZATION", libelle: "Team to mobilize on site", ordre: 3, actifPourRooftop: true },
+  { code: "IMPLANTATION", libelle: "Site Implantation end date", ordre: 4, actifPourRooftop: true },
+  { code: "EXCAVATION", libelle: "Excavation /Pole broking End date", ordre: 5, actifPourRooftop: false },
+  { code: "LEVELING", libelle: "Leveling Concrete (pit earthing,beton de proprete) End date", ordre: 6, actifPourRooftop: false },
+  { code: "POLE_REINFORCEMENT", libelle: "Pole Reinforcement End date", ordre: 7, actifPourRooftop: false },
+  { code: "IRON_WORK", libelle: "Iron Work (tissage fondation) End date", ordre: 8, actifPourRooftop: false },
+  { code: "ANCHOR_BOLT", libelle: "Anchor Bolt & Coffin work for Fondation (Coffrage) End Date", ordre: 9, actifPourRooftop: false },
+  { code: "FOUNDATION_CASTING", libelle: "Fondation Casting End Date", ordre: 10, actifPourRooftop: false },
+  { code: "UNCOFFIN", libelle: "Uncoffin the foundation & correct errors End Date", ordre: 11, actifPourRooftop: false },
+  { code: "BACKFILLING", libelle: "Backfilling End Date", ordre: 12, actifPourRooftop: false },
+  { code: "TOWER_MOS", libelle: "Tower MOS", ordre: 13, actifPourRooftop: true },
+  { code: "TOWER_PAINTING", libelle: "Tower Painting End date", ordre: 14, actifPourRooftop: true },
+  { code: "TOWER_ERECTION", libelle: "Tower Erection End date", ordre: 15, actifPourRooftop: true },
+  { code: "EARTHING", libelle: "Earthing End date", ordre: 16, actifPourRooftop: true },
+  { code: "WATERPROOFING", libelle: "Waterproofing/Canopy/Cable tray end date", ordre: 17, actifPourRooftop: true },
+  { code: "FENCE", libelle: "Fence (Cloture, gravionnage, rampe d'access) End date", ordre: 18, actifPourRooftop: false },
+  { code: "FINAL_RFI", libelle: "Final RFI", ordre: 19, actifPourRooftop: true },
+];

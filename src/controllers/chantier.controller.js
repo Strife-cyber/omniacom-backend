@@ -1,5 +1,7 @@
 import * as service from "../services/chantier.service.js";
 import { filterOutput } from "../middlewares/authorize.js";
+import { buildUploadUrl } from "../middlewares/upload.js";
+import { API_PUBLIC_URL } from "../config/env.js";
 
 // =============================================================================
 // Controleur Chantier
@@ -30,7 +32,16 @@ import { filterOutput } from "../middlewares/authorize.js";
  */
 export async function getAll(req, res, next) {
   try {
-    const items = await service.findAll();
+    const items = await service.findAll(req.query);
+    res.json({ success: true, data: filterOutput(req.user, items, "Chantier") });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getDailyProgress(req, res, next) {
+  try {
+    const items = await service.findDailyProgress();
     res.json({ success: true, data: filterOutput(req.user, items, "Chantier") });
   } catch (err) {
     next(err);
@@ -215,6 +226,32 @@ export async function remove(req, res, next) {
   try {
     const id = parseInt(req.params.id, 10);
     await service.remove(id);
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function uploadPhoto(req, res, next) {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (!req.file) {
+      res.status(400).json({ success: false, message: "Photo requise" });
+      return;
+    }
+    const url = `${API_PUBLIC_URL}${buildUploadUrl("chantiers", req.file.filename)}`;
+    const photo = await service.addPhoto(id, url, req.body.legende);
+    if (req.body.setCover === "true") await service.setCoverPhoto(id, url);
+    res.status(201).json({ success: true, data: photo });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function deletePhoto(req, res, next) {
+  try {
+    const photoId = parseInt(req.params.photoId, 10);
+    await service.removePhoto(photoId);
     res.status(204).end();
   } catch (err) {
     next(err);

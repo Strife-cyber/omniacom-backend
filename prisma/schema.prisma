@@ -7,21 +7,15 @@ datasource db {
   provider = "postgresql"
 }
 
-// =============================================================================
-// EXEMPLE DE MODELE : Utilisateur
-// =============================================================================
-// Decommentez et adaptez ce modele pour commencer.
-// Supprimez-le ou remplacez-le par vos propres modeles.
-// =============================================================================
-
 model Utilisateur {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  nom       String
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  nom        String
   motDePasse String   @map("mot_de_passe")
-  role      Role     @default(UTILISATEUR)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  role       Role     @default(UTILISATEUR)
+  photoUrl   String?  @map("photo_url")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@map("utilisateurs")
 }
@@ -34,9 +28,8 @@ enum Role {
   GESTIONNAIRE_PLANNING
 }
 
-
 model Technicien {
-  id        Int      @id @default(autoincrement())
+  id        Int              @id @default(autoincrement())
   nom       String
   prenom    String
   telephone String
@@ -44,7 +37,7 @@ model Technicien {
 
   interventions    Intervention[]
   verificationsEPI VerificationEPI[]
-  presences         Presence[]
+  presences        Presence[]
 
   @@map("techniciens")
 }
@@ -54,31 +47,29 @@ enum TechnicienStatut {
   INACTIF
 }
 
-
 model Site {
-  id              Int      @id @default(autoincrement())
-  nom             String
-  localisation    String
-  region          String
+  id           Int    @id @default(autoincrement())
+  nom          String
+  localisation String
+  region       String
 
-  interventions    Intervention[]
+  interventions Intervention[]
 
   @@map("sites")
 }
 
-
 model Intervention {
-  id              Int                     @id @default(autoincrement())
-  siteId          Int                     @map("site_id")
-  technicienId    Int                     @map("technicien_id")
-  timestampDebut  DateTime                @default(now()) @map("timestamp_debut")
-  timestampFin    DateTime                @map("timestamp_fin")
-  typeAction      InterventionTypeAction  @map("type_action")
-  statut          InterventionStatut
+  id             Int                    @id @default(autoincrement())
+  siteId         Int                    @map("site_id")
+  technicienId   Int                    @map("technicien_id")
+  timestampDebut DateTime               @default(now()) @map("timestamp_debut")
+  timestampFin   DateTime               @map("timestamp_fin")
+  typeAction     InterventionTypeAction @map("type_action")
+  statut         InterventionStatut
 
-  site            Site                    @relation(fields: [siteId], references: [id])
-  technicien      Technicien              @relation(fields: [technicienId], references: [id])
-  presences       Presence[]
+  site       Site       @relation(fields: [siteId], references: [id])
+  technicien Technicien @relation(fields: [technicienId], references: [id])
+  presences  Presence[]
 
   @@map("interventions")
 }
@@ -99,9 +90,9 @@ enum InterventionStatut {
 }
 
 model Equipements {
-  id        Int      @id @default(autoincrement())
-  nom       String
-  status    EquipementStatut
+  id     Int              @id @default(autoincrement())
+  nom    String
+  status EquipementStatut
 
   @@map("equipements")
 }
@@ -114,16 +105,16 @@ enum EquipementStatut {
 }
 
 model VerificationEPI {
-  id                   Int                     @id @default(autoincrement())
-  technicienId         Int                     @map("technicien_id")
-  dateDerniereVerif    DateTime                @default(now()) @map("date_derniere_verif")
-  dateDemande          DateTime                @map("date_demande")
-  dateEnvoie           DateTime                @map("date_envoie")
-  joursRetard          Int
-  prochaineDate        DateTime                @map("prochaine_date")
-  statut               VerificationEPIStatut
+  id                Int                   @id @default(autoincrement())
+  technicienId      Int                   @map("technicien_id")
+  dateDerniereVerif DateTime              @default(now()) @map("date_derniere_verif")
+  dateDemande       DateTime              @map("date_demande")
+  dateEnvoie        DateTime              @map("date_envoie")
+  joursRetard       Int
+  prochaineDate     DateTime              @map("prochaine_date")
+  statut            VerificationEPIStatut
 
-  technicien           Technicien              @relation(fields: [technicienId], references: [id])
+  technicien Technicien @relation(fields: [technicienId], references: [id])
 
   @@map("verification_epi")
 }
@@ -135,14 +126,14 @@ enum VerificationEPIStatut {
 }
 
 model Presence {
-  id               Int                     @id @default(autoincrement())
-  technicienId     Int                     @map("technicien_id")
-  interventionsId  Int                     @map("interventions_id")
-  date             DateTime                @default(now()) @map("date")
-  statut           PresenceStatut
+  id              Int            @id @default(autoincrement())
+  technicienId    Int            @map("technicien_id")
+  interventionsId Int            @map("interventions_id")
+  date            DateTime       @default(now()) @map("date")
+  statut          PresenceStatut
 
-  technicien       Technicien              @relation(fields: [technicienId], references: [id])
-  intervention     Intervention            @relation(fields: [interventionsId], references: [id])
+  technicien   Technicien   @relation(fields: [technicienId], references: [id])
+  intervention Intervention @relation(fields: [interventionsId], references: [id])
 
   @@map("presences")
 }
@@ -155,19 +146,38 @@ enum PresenceStatut {
   DEPLACEMENT
 }
 
-model Chantier {
-  id                    Int                    @id @default(autoincrement())
-  entreprise            String
-  codeSite              String
-  nomSite               String
-  typeSite              String
-  status                ChantierStatut
-  avancementPlanifie    Float
-  avancementReel        Float
-  dateGo                DateTime                @default(now()) @map("date")
+model EtapeModele {
+  id               Int     @id @default(autoincrement())
+  code             String  @unique
+  libelle          String
+  ordre            Int
+  actifPourRooftop Boolean @default(true) @map("actif_pour_rooftop")
 
-  bonDeCommandes        BonDeCommande[]
-  etapesChantier        EtapeChantier[]
+  @@map("etape_modele")
+}
+
+model Chantier {
+  id                 Int            @id @default(autoincrement())
+  entreprise         String
+  codeSite           String         @map("code_site")
+  nomSite            String         @map("nom_site")
+  typeSite           String         @map("type_site")
+  status             ChantierStatut
+  comment            String?
+  projet             String?
+  statutSite         String?        @default("CW") @map("statut_site")
+  hauteurTour        String?        @map("hauteur_tour")
+  fournisseurTour    String?        @map("fournisseur_tour")
+  prixSite           Decimal?       @db.Decimal(15, 2) @map("prix_site")
+  photoUrl           String?        @map("photo_url")
+  avancementPlanifie Float          @default(0) @map("avancement_planifie")
+  avancementReel     Float          @default(0) @map("avancement_reel")
+  dateGo             DateTime       @default(now()) @map("date_go")
+  bonDeCommandeId    Int?           @map("bon_de_commande_id")
+
+  bonDeCommande BonDeCommande?  @relation(fields: [bonDeCommandeId], references: [id])
+  etapesChantier EtapeChantier[]
+  photos         ChantierPhoto[]
 
   @@map("chantier")
 }
@@ -180,30 +190,46 @@ enum ChantierStatut {
   APD_ON_GOING
 }
 
+model ChantierPhoto {
+  id         Int      @id @default(autoincrement())
+  chantierId Int      @map("chantier_id")
+  url        String
+  legende    String?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  chantier Chantier @relation(fields: [chantierId], references: [id], onDelete: Cascade)
+
+  @@map("chantier_photos")
+}
+
 model BonDeCommande {
-  id                   Int                     @id @default(autoincrement())
-  chantierId           Int                     @map("chantier_id")
-  numeroBc            String
-  montantPo           Decimal                 @db.Decimal(15, 2)
-  montantFacture      Decimal                 @db.Decimal(15, 2)
-  montantRestant      Decimal                 @db.Decimal(15, 2)
-  projetAssocie       String
-  chantier             Chantier                @relation(fields: [chantierId], references: [id])
-  lignesFacturation    LigneFacturation[]
+  id              Int     @id @default(autoincrement())
+  numeroBc        String  @unique @map("numero_bc")
+  montantPo       Decimal @db.Decimal(15, 2) @map("montant_po")
+  montantFacture  Decimal @default(0) @db.Decimal(15, 2) @map("montant_facture")
+  montantRestant  Decimal @default(0) @db.Decimal(15, 2) @map("montant_restant")
+  projetAssocie   String? @map("projet_associe")
+
+  chantiers         Chantier[]
+  lignesFacturation LigneFacturation[]
 
   @@map("bon_de_commande")
 }
 
 model EtapeChantier {
-  id                   Int                     @id @default(autoincrement())
-  chantierId           Int                     @map("chantier_id")
-  nomEtape            String
-  datePlanifiee       DateTime
-  dateReelle          DateTime
-  retardMinutes       Int
-  status               EtapeChantierStatut
-  chantier             Chantier                @relation(fields: [chantierId], references: [id])
+  id            Int                 @id @default(autoincrement())
+  chantierId    Int                 @map("chantier_id")
+  codeEtape     String              @map("code_etape")
+  nomEtape      String              @map("nom_etape")
+  ordre         Int                 @default(0)
+  datePlanifiee DateTime?           @map("date_planifiee")
+  dateReelle    DateTime?           @map("date_reelle")
+  retardJours   Int                 @default(0) @map("retard_jours")
+  status        EtapeChantierStatut
 
+  chantier Chantier @relation(fields: [chantierId], references: [id], onDelete: Cascade)
+
+  @@unique([chantierId, codeEtape])
   @@map("etape_chantier")
 }
 
@@ -212,17 +238,18 @@ enum EtapeChantierStatut {
   EN_COURS
   TERMINE
   EN_RETARD
+  NON_APPLICABLE
 }
 
-
 model LigneFacturation {
-  id                   Int                     @id @default(autoincrement())
-  bonDeCommandeId      Int                     @map("bon_de_commande_id")
-  montantHt            Decimal                 @db.Decimal(15, 2) @map("montant_ht")
-  statutPaiement       String                  @map("statut_paiement")
-  dateFacture          DateTime                @map("date_facture")
-  description          String
-  bonDeCommande        BonDeCommande           @relation(fields: [bonDeCommandeId], references: [id])
+  id              Int                    @id @default(autoincrement())
+  bonDeCommandeId Int                    @map("bon_de_commande_id")
+  montantHt       Decimal                @db.Decimal(15, 2) @map("montant_ht")
+  statutPaiement  LigneFacturationStatut @map("statut_paiement")
+  dateFacture     DateTime?              @map("date_facture")
+  description     String?
+
+  bonDeCommande BonDeCommande @relation(fields: [bonDeCommandeId], references: [id], onDelete: Cascade)
 
   @@map("ligne_facturation")
 }

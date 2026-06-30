@@ -49,9 +49,9 @@ async function seedUtilisateurs() {
 
   const utilisateurs = [
     {
-      email: "admin@omniacom.fr",
-      nom: "Admin Systeme",
-      motDePasse: await hashMdp("admin123"),
+      email: "uriel.tanga@2029.ucac-icam.com",
+      nom: "Uriel Tanga",
+      motDePasse: await hashMdp("Admin@2026"),
       role: "ADMIN",
     },
     {

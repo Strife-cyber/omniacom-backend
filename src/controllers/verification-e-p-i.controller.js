@@ -1,124 +1,23 @@
 import * as service from "../services/verification-e-p-i.service.js";
-import { filterOutput } from "../middlewares/authorize.js";
 
-// =============================================================================
-// Controleur VerificationEPI
-// =============================================================================
-
-/**
- * @openapi
- * /api/verification-e-p-is:
- *   get:
- *     tags:
- *       - VerificationEPI
- *     summary: Liste tous les verification-e-p-is
- *     responses:
- *       200:
- *         description: Liste des verification-e-p-is
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     type: object
- */
 export async function getAll(req, res, next) {
   try {
-    const items = await service.findAll();
-    res.json({ success: true, data: filterOutput(req.user, items, "VerificationEPI") });
+    const items = await service.findAll(req.query.search);
+    res.json({ success: true, data: items });
   } catch (err) {
     next(err);
   }
 }
 
-/**
- * @openapi
- * /api/verification-e-p-is/{id}:
- *   get:
- *     tags:
- *       - VerificationEPI
- *     summary: Recupere un verification-e-p-i par son ID
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Identifiant du verification-e-p-i
- *     responses:
- *       200:
- *         description: VerificationEPI trouve
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
- *       404:
- *         $ref: '#/components/responses/ErrorResponse'
- */
 export async function getById(req, res, next) {
   try {
-    const id = parseInt(req.params.id, 10);
-    const item = await service.findById(id);
-    res.json({ success: true, data: filterOutput(req.user, item, "VerificationEPI") });
+    const item = await service.findById(parseInt(req.params.id, 10));
+    res.json({ success: true, data: item });
   } catch (err) {
     next(err);
   }
 }
 
-/**
- * @openapi
- * /api/verification-e-p-is:
- *   post:
- *     tags:
- *       - VerificationEPI
- *     summary: Cree un nouveau verification-e-p-i
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               technicienId:
- *                 type: integer
- *               dateDerniereVerif:
- *                 type: string
- *               dateDemande:
- *                 type: string
- *               dateEnvoie:
- *                 type: string
- *               joursRetard:
- *                 type: integer
- *               prochaineDate:
- *                 type: string
- *     responses:
- *       201:
- *         description: VerificationEPI cree avec succes
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
- *       400:
- *         $ref: '#/components/responses/ValidationError'
- */
 export async function create(req, res, next) {
   try {
     const item = await service.create(req.body);
@@ -128,90 +27,42 @@ export async function create(req, res, next) {
   }
 }
 
-/**
- * @openapi
- * /api/verification-e-p-is/{id}:
- *   put:
- *     tags:
- *       - VerificationEPI
- *     summary: Met a jour un verification-e-p-i existant
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Identifiant du verification-e-p-i
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               technicienId:
- *                 type: integer
- *               dateDerniereVerif:
- *                 type: string
- *               dateDemande:
- *                 type: string
- *               dateEnvoie:
- *                 type: string
- *               joursRetard:
- *                 type: integer
- *               prochaineDate:
- *                 type: string
- *     responses:
- *       200:
- *         description: VerificationEPI mis a jour
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: object
- *       404:
- *         $ref: '#/components/responses/ErrorResponse'
- */
 export async function update(req, res, next) {
   try {
-    const id = parseInt(req.params.id, 10);
-    const item = await service.update(id, req.body);
-    res.json({ success: true, data: filterOutput(req.user, item, "VerificationEPI") });
+    const item = await service.update(parseInt(req.params.id, 10), req.body);
+    res.json({ success: true, data: item });
   } catch (err) {
     next(err);
   }
 }
 
-/**
- * @openapi
- * /api/verification-e-p-is/{id}:
- *   delete:
- *     tags:
- *       - VerificationEPI
- *     summary: Supprime un verification-e-p-i
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: Identifiant du verification-e-p-i
- *     responses:
- *       204:
- *         description: VerificationEPI supprime avec succes (pas de contenu)
- *       404:
- *         $ref: '#/components/responses/ErrorResponse'
- */
 export async function remove(req, res, next) {
   try {
-    const id = parseInt(req.params.id, 10);
-    await service.remove(id);
+    await service.remove(parseInt(req.params.id, 10));
     res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getHistorique(req, res, next) {
+  try {
+    const technicienId = parseInt(req.params.technicienId, 10);
+    const { mois, annee } = req.query;
+    const items = await service.findHistorique(technicienId, mois, annee);
+    res.json({ success: true, data: items });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function exportExcel(req, res, next) {
+  try {
+    const workbook = await service.exportExcel();
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", "attachment; filename=suivi-epi.xlsx");
+    await workbook.xlsx.write(res);
+    res.end();
   } catch (err) {
     next(err);
   }

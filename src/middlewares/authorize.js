@@ -84,17 +84,13 @@ const policies = {
     description: "Gere les interventions, techniciens, sites et feuilles de presence",
   },
 
-  // GESTIONNAIRE_EPI : lit/modifie les donnees EPI
+  // GESTIONNAIRE_EPI : lit/modifie les verifications EPI + lecture techniciens
   GESTIONNAIRE_EPI: {
     can(action, resource) {
-      const ressourcesAutorisees = [
-        "Equipements",
-        "VerificationEPI",
-        "VerificationEPI_Equipement",
-      ];
-      return ressourcesAutorisees.includes(resource);
+      if (action === "read" && resource === "Technicien") return true;
+      return resource === "VerificationEPI";
     },
-    description: "Gere les equipements de protection individuels",
+    description: "Gere les vérifications EPI des techniciens",
   },
 
   // PMO : gestion des chantiers, bons de commande et facturation

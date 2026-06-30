@@ -89,40 +89,18 @@ enum InterventionStatut {
   REPORTE
 }
 
-model Equipements {
-  id     Int              @id @default(autoincrement())
-  nom    String
-  status EquipementStatut
-
-  @@map("equipements")
-}
-
-enum EquipementStatut {
-  CONFORME
-  EN_RETARD
-  DEFECTUEUX
-  HORS_SERVICE
-}
-
 model VerificationEPI {
   id                Int                   @id @default(autoincrement())
   technicienId      Int                   @map("technicien_id")
   dateDerniereVerif DateTime              @default(now()) @map("date_derniere_verif")
   dateDemande       DateTime              @map("date_demande")
   dateEnvoie        DateTime              @map("date_envoie")
-  joursRetard       Int
-  prochaineDate     DateTime              @map("prochaine_date")
-  statut            VerificationEPIStatut
-
+  joursRetard            Int
+  prochaineDate          DateTime  @map("prochaine_date")
+  dateDelaiVerification  DateTime? @map("date_delai_verification")
   technicien Technicien @relation(fields: [technicienId], references: [id])
 
   @@map("verification_epi")
-}
-
-enum VerificationEPIStatut {
-  CONFORME
-  EN_RETARD
-  DEFECTUEUX
 }
 
 model Presence {
@@ -259,10 +237,3 @@ enum LigneFacturationStatut {
   NOT_PAID
 }
 
-model VerificationEPI_Equipement {
-  verificationEpiId Int @map("verification_epi_id")
-  equipementsId     Int @map("equipements_id")
-
-  @@id([verificationEpiId, equipementsId])
-  @@map("verification_epi_equipement")
-}

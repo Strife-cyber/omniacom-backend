@@ -5,7 +5,7 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "dev": "cross-env NODE_OPTIONS=\"--experimental-strip-types\" nodemon src/server.js",
+    "dev": "cross-env NODE_OPTIONS=\"--experimental-strip-types\" nodemon --watch src --watch .env --ext js,mjs,cjs,json,ts src/server.js",
     "start": "node --experimental-strip-types src/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

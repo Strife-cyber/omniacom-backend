@@ -176,31 +176,6 @@ async function seedSites() {
 }
 
 // ===========================================================================
-// 4. EQUIPEMENTS
-// ===========================================================================
-
-async function seedEquipements() {
-  console.log("  Equipements...");
-
-  const equipements = [
-    { nom: "Casque de protection", status: "CONFORME" },
-    { nom: "Gants isolants", status: "CONFORME" },
-    { nom: "Harnais de securite", status: "CONFORME" },
-    { nom: "Lunettes de protection", status: "EN_RETARD" },
-    { nom: "Chaussures de securite", status: "CONFORME" },
-    { nom: "Masque anti-poussiere", status: "DEFECTUEUX" },
-    { nom: "Protection auditive", status: "CONFORME" },
-    { nom: "Detecteur de gaz", status: "HORS_SERVICE" },
-  ];
-
-  for (const e of equipements) {
-    await prisma.equipements.create({ data: e });
-  }
-
-  console.log(`    ${equipements.length} equipements crees`);
-}
-
-// ===========================================================================
 // 5. CHANTIERS
 // ===========================================================================
 
@@ -368,7 +343,6 @@ async function seedVerificationsEPI() {
       dateEnvoie: dateDepart(92),
       joursRetard: 5,
       prochaineDate: dateDansFutur(275),
-      statut: "CONFORME",
     },
     {
       technicien: { connect: { id: techniciens[1].id } },
@@ -377,7 +351,6 @@ async function seedVerificationsEPI() {
       dateEnvoie: dateDepart(182),
       joursRetard: 0,
       prochaineDate: dateDansFutur(185),
-      statut: "CONFORME",
     },
     {
       technicien: { connect: { id: techniciens[2].id } },
@@ -386,7 +359,6 @@ async function seedVerificationsEPI() {
       dateEnvoie: dateDepart(48),
       joursRetard: 15,
       prochaineDate: dateDepart(-5),
-      statut: "EN_RETARD",
     },
     {
       technicien: { connect: { id: techniciens[3].id } },
@@ -395,7 +367,6 @@ async function seedVerificationsEPI() {
       dateEnvoie: dateDepart(202),
       joursRetard: 12,
       prochaineDate: dateDepart(-30),
-      statut: "EN_RETARD",
     },
   ];
 
@@ -534,62 +505,6 @@ async function seedLignesFacturation() {
 }
 
 // ===========================================================================
-// 12. LIENS VERIFICATION EPI <-> EQUIPEMENT
-// ===========================================================================
-
-async function seedLiaisonsEPI() {
-  console.log("  Liaisons EPI-Equipements...");
-
-  const verifications = await prisma.verificationEPI.findMany();
-  const equipements = await prisma.equipements.findMany();
-
-  const liaisons = [
-    {
-      verificationEpiId: verifications[0].id,
-      equipementsId: equipements[0].id,
-    },
-    {
-      verificationEpiId: verifications[0].id,
-      equipementsId: equipements[1].id,
-    },
-    {
-      verificationEpiId: verifications[0].id,
-      equipementsId: equipements[4].id,
-    },
-    {
-      verificationEpiId: verifications[1].id,
-      equipementsId: equipements[0].id,
-    },
-    {
-      verificationEpiId: verifications[1].id,
-      equipementsId: equipements[6].id,
-    },
-    {
-      verificationEpiId: verifications[2].id,
-      equipementsId: equipements[3].id,
-    },
-    {
-      verificationEpiId: verifications[2].id,
-      equipementsId: equipements[5].id,
-    },
-    {
-      verificationEpiId: verifications[3].id,
-      equipementsId: equipements[2].id,
-    },
-    {
-      verificationEpiId: verifications[3].id,
-      equipementsId: equipements[7].id,
-    },
-  ];
-
-  for (const l of liaisons) {
-    await prisma.verificationEPI_Equipement.create({ data: l });
-  }
-
-  console.log(`    ${liaisons.length} liaisons EPI-Equipements crees`);
-}
-
-// ===========================================================================
 // MAIN
 // ===========================================================================
 
@@ -600,7 +515,6 @@ async function main() {
 
   // Nettoyage dans l'ordre inverse des dependances
   console.log("Nettoyage des donnees existantes...");
-  await prisma.verificationEPI_Equipement.deleteMany();
   await prisma.ligneFacturation.deleteMany();
   await prisma.chantierPhoto.deleteMany();
   await prisma.etapeChantier.deleteMany();
@@ -609,7 +523,6 @@ async function main() {
   await prisma.presence.deleteMany();
   await prisma.verificationEPI.deleteMany();
   await prisma.intervention.deleteMany();
-  await prisma.equipements.deleteMany();
   await prisma.chantier.deleteMany();
   await prisma.technicien.deleteMany();
   await prisma.site.deleteMany();
@@ -621,7 +534,6 @@ async function main() {
   await seedUtilisateurs();
   await seedTechniciens();
   await seedSites();
-  await seedEquipements();
   await seedBonsDeCommande();
   await seedChantiers();
   await seedInterventions();
@@ -629,7 +541,6 @@ async function main() {
   await seedPresences();
   await seedEtapesChantier();
   await seedLignesFacturation();
-  await seedLiaisonsEPI();
 
   // Resume
   console.log("\n============================================");
@@ -638,7 +549,6 @@ async function main() {
   console.log(`  Utilisateurs        : ${await prisma.utilisateur.count()}`);
   console.log(`  Techniciens          : ${await prisma.technicien.count()}`);
   console.log(`  Sites                : ${await prisma.site.count()}`);
-  console.log(`  Equipements          : ${await prisma.equipements.count()}`);
   console.log(`  Chantiers            : ${await prisma.chantier.count()}`);
   console.log(`  Interventions        : ${await prisma.intervention.count()}`);
   console.log(
@@ -649,9 +559,6 @@ async function main() {
   console.log(`  Bons de commande     : ${await prisma.bonDeCommande.count()}`);
   console.log(
     `  Lignes facturation   : ${await prisma.ligneFacturation.count()}`,
-  );
-  console.log(
-    `  Liaisons EPI-Equip   : ${await prisma.verificationEPI_Equipement.count()}`,
   );
   console.log("============================================\n");
 }

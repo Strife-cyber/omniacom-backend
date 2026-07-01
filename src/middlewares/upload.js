@@ -39,7 +39,7 @@ export const uploadChantierPhoto = multer({
   fileFilter,
 }).single("photo");
 
-export const uploadExcel = multer({
+const _excelMulter = multer({
   storage: storageSubdir("imports"),
   limits: { fileSize: 15 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
@@ -50,7 +50,19 @@ export const uploadExcel = multer({
     }
     cb(null, true);
   },
-}).single("file");
+});
+
+// Accepte n'importe quel nom de champ (file, excel, document, upload…)
+export function uploadExcel(req, res, next) {
+  _excelMulter.any()(req, res, (err) => {
+    if (err) return next(err);
+    // Normalise : met le premier fichier reçu dans req.file
+    if (!req.file && Array.isArray(req.files) && req.files.length > 0) {
+      req.file = req.files[0];
+    }
+    next();
+  });
+}
 
 /** Construit l URL publique d un fichier uploade. */
 export function buildUploadUrl(subdir, filename) {

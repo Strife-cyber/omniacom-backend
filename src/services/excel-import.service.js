@@ -111,6 +111,7 @@ export async function importBcSuivi(filePath) {
       const nomSite = row.getCell(6).value;
       const po = row.getCell(4).value;
       if (!nomSite && !po) continue;
+      if (!nomSite) continue;
       if (String(row.getCell(1).value).includes("TOTAL")) break;
 
       const numeroBc = normalizeBcNumero(po);

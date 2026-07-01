@@ -50,26 +50,36 @@ export async function exportUtilisateurs(req, res, next) {
 
 export async function importDailyTracker(req, res, next) {
   try {
+    console.log("[IMPORT] daily-tracker - req.file:", req.file);
+    console.log("[IMPORT] daily-tracker - req.files:", req.files);
+    console.log("[IMPORT] daily-tracker - champs reçus:", Object.keys(req.body || {}));
     if (!req.file) {
-      res.status(400).json({ success: false, message: "Fichier Excel requis" });
+      console.warn("[IMPORT] Aucun fichier reçu. Champ attendu: 'file'");
+      res.status(400).json({ success: false, message: "Fichier Excel requis (champ 'file')" });
       return;
     }
     const result = await importService.importDailyTracker(req.file.path);
     res.json({ success: true, data: result });
   } catch (err) {
+    console.error("[IMPORT] daily-tracker erreur:", err.message, err.stack);
     next(err);
   }
 }
 
 export async function importBcSuivi(req, res, next) {
   try {
+    console.log("[IMPORT] bc-suivi - req.file:", req.file);
+    console.log("[IMPORT] bc-suivi - req.files:", req.files);
+    console.log("[IMPORT] bc-suivi - champs reçus:", Object.keys(req.body || {}));
     if (!req.file) {
-      res.status(400).json({ success: false, message: "Fichier Excel requis" });
+      console.warn("[IMPORT] Aucun fichier reçu. Champ attendu: 'file'");
+      res.status(400).json({ success: false, message: "Fichier Excel requis (champ 'file')" });
       return;
     }
     const result = await importService.importBcSuivi(req.file.path);
     res.json({ success: true, data: result });
   } catch (err) {
+    console.error("[IMPORT] bc-suivi erreur:", err.message, err.stack);
     next(err);
   }
 }

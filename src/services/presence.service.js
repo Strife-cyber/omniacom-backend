@@ -36,9 +36,27 @@ export async function findById(id) {
  * @param {Date} date
  * @returns {Promise<Object>} Le presence cree
  */
+const STATUTS_VALIDES = ["PRESENT", "ABSENT", "EN_CONGE", "MALADIE", "DEPLACEMENT"];
+
 export async function create(data) {
-  // Ajoutez ici les validations metier avant la creation
-  return prisma.presence.create({ data });
+  const technicienId = parseInt(data.technicienId, 10);
+  const interventionsId = parseInt(data.interventionsId, 10);
+  const statut = data.statut;
+
+  if (!technicienId || isNaN(technicienId)) throw new ApiError(400, "technicienId invalide ou manquant");
+  if (!interventionsId || isNaN(interventionsId)) throw new ApiError(400, "interventionsId invalide ou manquant");
+  if (!statut || !STATUTS_VALIDES.includes(statut)) {
+    throw new ApiError(400, `statut invalide. Valeurs acceptées : ${STATUTS_VALIDES.join(", ")}`);
+  }
+
+  return prisma.presence.create({
+    data: {
+      technicienId,
+      interventionsId,
+      statut,
+      date: data.date ? new Date(data.date) : undefined,
+    },
+  });
 }
 
 /**

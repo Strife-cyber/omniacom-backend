@@ -115,9 +115,11 @@ export async function getById(req, res, next) {
  */
 export async function create(req, res, next) {
   try {
+    console.log("[PRESENCE] body reçu:", JSON.stringify(req.body));
     const item = await service.create(req.body);
     res.status(201).json({ success: true, data: item });
   } catch (err) {
+    console.error("[PRESENCE] erreur create:", err.message);
     next(err);
   }
 }

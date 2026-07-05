@@ -50,8 +50,10 @@ function normaliserStatut(valeur) {
 }
 
 export async function create(data) {
-  const technicienId = parseInt(data.technicienId, 10);
-  const interventionsId = parseInt(data.interventionsId, 10);
+  // Accepte technicienId direct ou objet { technicien: { id: x } }
+  const technicienId = parseInt(data.technicienId ?? data.technicien?.id, 10);
+  // Accepte interventionsId direct ou objet { intervention: { id: x } }
+  const interventionsId = parseInt(data.interventionsId ?? data.intervention?.id, 10);
   const statut = normaliserStatut(data.statut);
 
   if (!technicienId || isNaN(technicienId)) throw new ApiError(400, "technicienId invalide ou manquant");

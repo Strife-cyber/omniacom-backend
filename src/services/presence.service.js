@@ -36,17 +36,28 @@ export async function findById(id) {
  * @param {Date} date
  * @returns {Promise<Object>} Le presence cree
  */
-const STATUTS_VALIDES = ["PRESENT", "ABSENT", "EN_CONGE", "MALADIE", "DEPLACEMENT"];
+const STATUT_MAP = {
+  "présent": "PRESENT", "present": "PRESENT", "PRESENT": "PRESENT",
+  "absent": "ABSENT", "ABSENT": "ABSENT",
+  "congé": "EN_CONGE", "conge": "EN_CONGE", "en congé": "EN_CONGE", "en conge": "EN_CONGE", "EN_CONGE": "EN_CONGE",
+  "maladie": "MALADIE", "MALADIE": "MALADIE",
+  "déplacement": "DEPLACEMENT", "deplacement": "DEPLACEMENT", "DEPLACEMENT": "DEPLACEMENT",
+};
+
+function normaliserStatut(valeur) {
+  if (!valeur) return null;
+  return STATUT_MAP[String(valeur).trim()] ?? null;
+}
 
 export async function create(data) {
   const technicienId = parseInt(data.technicienId, 10);
   const interventionsId = parseInt(data.interventionsId, 10);
-  const statut = data.statut;
+  const statut = normaliserStatut(data.statut);
 
   if (!technicienId || isNaN(technicienId)) throw new ApiError(400, "technicienId invalide ou manquant");
   if (!interventionsId || isNaN(interventionsId)) throw new ApiError(400, "interventionsId invalide ou manquant");
-  if (!statut || !STATUTS_VALIDES.includes(statut)) {
-    throw new ApiError(400, `statut invalide. Valeurs acceptées : ${STATUTS_VALIDES.join(", ")}`);
+  if (!statut) {
+    throw new ApiError(400, "statut invalide ou manquant. Valeurs acceptées : Présent, Absent, Congé, Maladie, Déplacement");
   }
 
   return prisma.presence.create({
